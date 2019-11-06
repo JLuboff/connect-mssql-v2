@@ -1,0 +1,28 @@
+{
+  "name": "connect-mssql-v2",
+  "version": "1.0.0",
+  "description": "MS SQL Server session store for Express Session",
+  "main": "store.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JLuboff/connect-mssql-v2.git"
+  },
+  "keywords": [
+    "sql",
+    "express",
+    "session",
+    "store"
+  ],
+  "author": "Jason Luboff",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JLuboff/connect-mssql-v2/issues"
+  },
+  "homepage": "https://github.com/JLuboff/connect-mssql-v2#readme",
+  "dependencies": {
+    "tslint-config-airbnb": "^5.11.2"
+  }
+}

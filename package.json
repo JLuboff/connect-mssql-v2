@@ -24,7 +24,11 @@
   "homepage": "https://github.com/JLuboff/connect-mssql-v2#readme",
   "dependencies": {
     "@types/mssql": "^4.3.1",
+    "express-session": "^1.17.0",
     "mssql": "^6.0.0",
     "tslint-config-airbnb": "^5.11.2"
+  },
+  "devDependencies": {
+    "@types/express-session": "^1.15.15"
   }
 }

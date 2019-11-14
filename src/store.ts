@@ -6,9 +6,10 @@ interface StoreOptions {
   autoRemove?: boolean;
   autoRemoveInterval?: number;
   autoRemoveCallback?: any;
+  useUTC?: boolean;
 }
 type Callback = (a?: any, b?: any) => void;
-const Store= (session: any) => {
+const Store = (session: any) => {
   const Store = session.Store || session.session.Store;
   class MSSQLStore extends Store {
     constructor(config: SQLConfig, options: StoreOptions) {
@@ -17,6 +18,8 @@ const Store= (session: any) => {
       this.ttl = options.ttl || 1000 * 60 * 60 * 24;
       this.autoRemove = options.autoRemove || false;
       this.autoRemoveInterval = options.autoRemoveInterval || 1000 * 60 * 10;
+      this.autoRemoveCallback = options.autoRemoveCallback || undefined;
+      this.useUTC = options.useUTC || true;
       this.config = config;
     }
 
@@ -24,16 +27,19 @@ const Store= (session: any) => {
     async initializeDatabase() {
       try {
         await this.databaseConnection.connect();
+        this.databaseConnection.on('connect', this.emit.bind(this, 'connect'));
+        this.databaseConnection.on('error', this.emit.bind(this, 'error'));
+
         if (this.autoRemove) {
-          this.destroyExpired();
           setInterval(this.destroyExpired.bind(this), this.autoRemoveInterval);
         }
       } catch (error) {
-        console.error(error)
+        console.error(error);
         throw error;
       }
     }
-    private ready(callback: Callback) {
+    private async ready(callback: Callback) {
+      await this.initializeDatabase();
       if (this.databaseConnection.connected) {
         return callback.call(this, null, null);
       }
@@ -52,7 +58,7 @@ const Store= (session: any) => {
     get(sid: string, callback: Callback) {
       this.ready(async (err: any) => {
         if (err) {
-          return callback(err);
+          throw err;
         }
 
         try {
@@ -83,7 +89,7 @@ const Store= (session: any) => {
     set(sid: string, data: any, callback: Callback) {
       this.ready(async (err: any) => {
         if (err) {
-          return callback(err);
+          throw err;
         }
 
         try {
@@ -110,7 +116,135 @@ const Store= (session: any) => {
         }
       });
     }
-    private destroyExpired() {}
+    //////////////////////////////////////////////////////////////////
+    // Update the expiration date of the given sid
+    /**
+     *
+     * @param sid
+     * @param data
+     * @param callback
+     */
+    ////////////////////////////////////////////////////////////////
+    touch(sid: string, data: any, callback: Callback) {
+      this.ready(async (err: any) => {
+        if (err) {
+          throw err;
+        }
+
+        try {
+          const expires = new Date(
+            (data.cookie && data.cookie.expires) || Date.now() + this.ttl
+          );
+          const request = this.databaseConnection.request();
+          await request
+            .input('sid', NVarChar(255), sid)
+            .input('expires', DateTime, expires).query(`
+              UPDATE ${this.table} 
+                SET expires = @expires 
+              WHERE sid = @sid`);
+
+          return callback();
+        } catch (error) {
+          return callback(error);
+        }
+      });
+    }
+    //////////////////////////////////////////////////////////////////
+    // Destroy the session associated with the given sid
+    /**
+     *
+     * @param sid
+     * @param callback
+     */
+    ////////////////////////////////////////////////////////////////
+    destroy(sid: string, callback: Callback) {
+      this.ready(async (err: any) => {
+        if (err) {
+          throw err;
+        }
+
+        try {
+          const request = this.databaseConnection.request();
+          await request.input('sid', NVarChar(255), sid).query(`
+              DELETE FROM ${this.table} 
+              WHERE sid = @sid`);
+
+          return callback();
+        } catch (error) {
+          return callback(error);
+        }
+      });
+    }
+    //////////////////////////////////////////////////////////////////
+    // Destroy expired sessions
+    ////////////////////////////////////////////////////////////////
+    destroyExpired(callback: Callback) {
+      this.ready(async (err: any) => {
+        if (err) {
+          throw err;
+        }
+
+        try {
+          const request = this.databaseConnection.request();
+          await request.query(`
+              DELETE FROM ${this.table} 
+              WHERE expires <= GET${this.useUTC ? 'UTC' : ''}DATE()`);
+
+          return callback();
+        } catch (error) {
+          return this.autoRemoveCallback
+            ? this.autoRemoveCallback(err)
+            : callback(err);
+        }
+      });
+    }
+    //////////////////////////////////////////////////////////////////
+    // Fetch number of sessions
+    /**
+     * @param callback
+     */
+    ////////////////////////////////////////////////////////////////
+    length(callback: Callback) {
+      this.ready(async (err: any) => {
+        if (err) {
+          throw err;
+        }
+
+        try {
+          const request = this.databaseConnection.request();
+          const result = await request.query(`
+              SELECT COUNT(sid) AS length
+              FROM ${this.table}`);
+
+          return callback(null, result.recordset[0].length);
+        } catch (error) {
+          return callback(error);
+        }
+      });
+    }
+    //////////////////////////////////////////////////////////////////
+    // Clear all sessions
+    /**
+     * @param callback
+     */
+    ////////////////////////////////////////////////////////////////
+    clear(callback: Callback) {
+      this.ready(async (err: any) => {
+        if (err) {
+          throw err;
+        }
+
+        try {
+          const request = this.databaseConnection.request();
+          await request.query(`
+              TRUNCATE TABLE ${this.table}`);
+
+          return callback();
+        } catch (error) {
+          return callback(error);
+        }
+      });
+    }
   }
   return MSSQLStore;
 };

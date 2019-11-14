@@ -4,7 +4,7 @@
   "description": "MS SQL Server session store for Express Session",
   "main": "store.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --watch ./dist/test"
   },
   "repository": {
     "type": "git",
@@ -24,11 +24,13 @@
   "homepage": "https://github.com/JLuboff/connect-mssql-v2#readme",
   "dependencies": {
     "@types/mssql": "^4.3.1",
-    "express-session": "^1.17.0",
-    "mssql": "^6.0.0",
-    "tslint-config-airbnb": "^5.11.2"
+    "mssql": "^6.0.0"
   },
   "devDependencies": {
-    "@types/express-session": "^1.15.15"
+    "@types/express-session": "^1.15.15",
+    "@types/jest": "^24.0.23",
+    "express-session": "^1.17.0",
+    "jest": "^24.9.0",
+    "tslint-config-airbnb": "^5.11.2"
   }
 }

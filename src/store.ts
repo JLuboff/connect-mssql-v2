@@ -1,4 +1,12 @@
-import sql, { config as SQLConfig, NVarChar, MAX, DateTime } from 'mssql';
+import sql, {
+  config as SQLConfig,
+  NVarChar,
+  MAX,
+  DateTime,
+  ConnectionPool
+} from 'mssql';
+import EventEmitter from 'events';
+class SQLEmitter extends EventEmitter {};
 
 interface StoreOptions {
   table?: string;
@@ -12,6 +20,15 @@ type Callback = (a?: any, b?: any) => void;
 const Store = (session: any) => {
   const Store = session.Store || session.session.Store;
   class MSSQLStore extends Store {
+    table: string;
+    ttl: number;
+    autoRemove: boolean;
+    autoRemoveInterval: number;
+    autoRemoveCallback?: (error?: Error) => any;
+    useUTC: boolean;
+    config: SQLConfig;
+    private databaseConnection: ConnectionPool | null;
+
     constructor(config: SQLConfig, options: StoreOptions) {
       super();
       this.table = options.table || 'sessions';
@@ -21,15 +38,18 @@ const Store = (session: any) => {
       this.autoRemoveCallback = options.autoRemoveCallback || undefined;
       this.useUTC = options.useUTC || true;
       this.config = config;
+      this.databaseConnection = null;
     }
 
-    private databaseConnection = new sql.ConnectionPool(this.config);
     async initializeDatabase() {
       try {
+        this.databaseConnection = new sql.ConnectionPool(this.config);
         await this.databaseConnection.connect();
-        this.databaseConnection.on('connect', this.emit.bind(this, 'connect'));
-        this.databaseConnection.on('error', this.emit.bind(this, 'error'));
-
+        const emitter = new SQLEmitter();
+        emitter.on('connect', this.emit.bind(this, 'connect'));
+        emitter.on('error', this.emit.bind(this, 'error'));
+        emitter.emit('connect')
+        emitter.emit('error')
         if (this.autoRemove) {
           setInterval(this.destroyExpired.bind(this), this.autoRemoveInterval);
         }
@@ -40,10 +60,10 @@ const Store = (session: any) => {
     }
     private async ready(callback: Callback) {
       await this.initializeDatabase();
-      if (this.databaseConnection.connected) {
+      if (this.databaseConnection && this.databaseConnection.connected) {
         return callback.call(this, null, null);
       }
-      if (this.databaseConnection.connecting) {
+      if (this.databaseConnection && this.databaseConnection.connecting) {
         return this.databaseConnection.once('connect', callback.bind(this));
       }
       callback.call(this, new Error('Connection is closed.'));
@@ -62,7 +82,7 @@ const Store = (session: any) => {
         }
 
         try {
-          const request = this.databaseConnection.request();
+          const request = (this.databaseConnection as ConnectionPool).request();
           const result = await request.input('sid', NVarChar(255), sid).query(`
               SELECT session FROM ${this.table} WHERE sid = @sid`);
 
@@ -96,10 +116,10 @@ const Store = (session: any) => {
           const expires = new Date(
             (data.cookie && data.cookie.expires) || Date.now() + this.ttl
           );
-          const request = this.databaseConnection.request();
+          const request = (this.databaseConnection as ConnectionPool).request();
           await request
             .input('sid', NVarChar(255), sid)
-            .input('session', NVarChar(MAX))
+            .input('session', NVarChar(MAX), JSON.stringify(data))
             .input('expires', DateTime, expires).query(`
               UPDATE ${this.table} 
                 SET session = @session, expires = @expires 
@@ -135,7 +155,7 @@ const Store = (session: any) => {
           const expires = new Date(
             (data.cookie && data.cookie.expires) || Date.now() + this.ttl
           );
-          const request = this.databaseConnection.request();
+          const request = (this.databaseConnection as ConnectionPool).request();
           await request
             .input('sid', NVarChar(255), sid)
             .input('expires', DateTime, expires).query(`
@@ -164,7 +184,7 @@ const Store = (session: any) => {
         }
 
         try {
-          const request = this.databaseConnection.request();
+          const request = (this.databaseConnection as ConnectionPool).request();
           await request.input('sid', NVarChar(255), sid).query(`
               DELETE FROM ${this.table} 
               WHERE sid = @sid`);
@@ -185,7 +205,7 @@ const Store = (session: any) => {
         }
 
         try {
-          const request = this.databaseConnection.request();
+          const request = (this.databaseConnection as ConnectionPool).request();
           await request.query(`
               DELETE FROM ${this.table} 
               WHERE expires <= GET${this.useUTC ? 'UTC' : ''}DATE()`);
@@ -211,7 +231,7 @@ const Store = (session: any) => {
         }
 
         try {
-          const request = this.databaseConnection.request();
+          const request = (this.databaseConnection as ConnectionPool).request();
           const result = await request.query(`
               SELECT COUNT(sid) AS length
               FROM ${this.table}`);
@@ -235,7 +255,7 @@ const Store = (session: any) => {
         }
 
         try {
-          const request = this.databaseConnection.request();
+          const request = (this.databaseConnection as ConnectionPool).request();
           await request.query(`
               TRUNCATE TABLE ${this.table}`);
 

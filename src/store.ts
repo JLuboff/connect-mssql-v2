@@ -34,7 +34,7 @@ const Store = (session: any) => {
     autoRemoveCallback?: (props?: any) => any;
     useUTC: boolean;
     config: SQLConfig;
-    private databaseConnection: ConnectionPool | null;
+    databaseConnection: ConnectionPool | null;
 
     constructor(config: SQLConfig, options: StoreOptions) {
       super();
@@ -220,7 +220,9 @@ const Store = (session: any) => {
               DELETE FROM ${this.table} 
               WHERE expires <= GET${this.useUTC ? 'UTC' : ''}DATE()`);
 
-          return callback();
+          return this.autoRemoveCallback
+            ? this.autoRemoveCallback()
+            : callback();
         } catch (error) {
           return this.autoRemoveCallback
             ? this.autoRemoveCallback(err)

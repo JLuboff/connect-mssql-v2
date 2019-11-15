@@ -176,7 +176,9 @@ const Store = (session) => {
                     await request.query(`
               DELETE FROM ${this.table} 
               WHERE expires <= GET${this.useUTC ? 'UTC' : ''}DATE()`);
-                    return callback();
+                    return this.autoRemoveCallback
+                        ? this.autoRemoveCallback()
+                        : callback();
                 }
                 catch (error) {
                     return this.autoRemoveCallback

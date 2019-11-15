@@ -13,12 +13,14 @@ const Store = (session) => {
     class MSSQLStore extends Store {
         constructor(config, options) {
             super();
-            this.table = options.table || 'sessions';
-            this.ttl = options.ttl || 1000 * 60 * 60 * 24;
-            this.autoRemove = options.autoRemove || false;
-            this.autoRemoveInterval = options.autoRemoveInterval || 1000 * 60 * 10;
-            this.autoRemoveCallback = options.autoRemoveCallback || undefined;
-            this.useUTC = options.useUTC || true;
+            this.table = (options && options.table) || 'sessions';
+            this.ttl = (options && options.ttl) || 1000 * 60 * 60 * 24;
+            this.autoRemove = (options && options.autoRemove) || false;
+            this.autoRemoveInterval =
+                (options && options.autoRemoveInterval) || 1000 * 60 * 10;
+            this.autoRemoveCallback =
+                (options && options.autoRemoveCallback) || undefined;
+            this.useUTC = (options && options.useUTC) || true;
             this.config = config;
             this.databaseConnection = null;
         }

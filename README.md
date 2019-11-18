@@ -45,7 +45,7 @@ app.use(session({
 
 - **options.table** - Table to use as session store. Default: `[sessions]`
 - **options.ttl** - (Time To Live) Determines the expiration date. Default: `1000 * 60 * 60 * 24` (24 hours)
-- **options.autoRemove** - Determines if expired sessions should be autoremoved or not. If value is `interval` then a new function, `destroyExpired()`, will autodelete expired sessions on a set interval. Default: `never`
+- **options.autoRemove** - Determines if expired sessions should be autoremoved or not. If value is `interval` then a new function, `destroyExpired()`, will autodelete expired sessions on a set interval. Default: `false`
 - **options.autoRemoveInterval** - Sets the timer interval for each call to `destroyExpired()`. Default: `1000 * 60 * 10` (10 min)
 - **options.autoRemoveCallback** - (NOT CURRENTLY TESTED) Is the callback function for `destroyExpired()`. Default: `undefined`
 - **options.useUTC** - Determines if we are to use the `GETUTCDATE` instead of `GETDATE` Default: `true`

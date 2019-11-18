@@ -48,6 +48,7 @@ app.use(session({
 - **options.autoRemove** - Determines if expired sessions should be autoremoved or not. If value is `true` then a new function, `destroyExpired()`, will autodelete expired sessions on a set interval. Default: `false`
 - **options.autoRemoveInterval** - Sets the timer interval for each call to `destroyExpired()`. Default: `1000 * 60 * 10` (10 min)
 - **options.autoRemoveCallback** - (NOT CURRENTLY TESTED) Is the callback function for `destroyExpired()`. Default: `undefined`
+- **options.useUTC** - Determines if we are to use the `GETUTCDATE` instead of `GETDATE` Default: `true`
 
 ### Advanced usage
 NOT SETUP

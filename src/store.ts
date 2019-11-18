@@ -17,7 +17,7 @@ interface StoreOptions {
    */
   ttl?: number;
   /**
-   * Determines if expired sessions should be autoremoved or not. If value is `interval` then a new function, `destroyExpired()`,
+   * Determines if expired sessions should be autoremoved or not. If value is `true` then a new function, `destroyExpired()`,
    * will autodelete expired sessions on a set interval. Default: `false`
    */
   autoRemove?: boolean;

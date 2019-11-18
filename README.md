@@ -41,7 +41,7 @@ app.use(session({
 }));
 ```
 
-### Options
+### Options
 
 - **options.table** - Table to use as session store. Default: `[sessions]`
 - **options.ttl** - (Time To Live) Determines the expiration date. Default: `1000 * 60 * 60 * 24` (24 hours)
@@ -72,7 +72,8 @@ app.use(session({
 
 To see all options please visit [node-mssql docs](https://github.com/patriksimek/node-mssql#cfg-basic).
 
-<a name="license" />
+
+
 ## License
 
 Copyright (c) 2014-2016 Patrik Simek

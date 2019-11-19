@@ -33,39 +33,6 @@ beforeAll(async () => {
 });
 
 describe('connect-mssql-v2', () => {
-  describe('Test emitters', () => {
-    test('Should emit a connect listener', done => {
-      const store = new MSSQLStore(sqlConfig, {
-        table: 'Sessions'
-      });
-      store.get('abcd', err => err);
-
-      store.on('connect', (connected: any) => {
-        expect(connected.databaseConnection._connected).toBeTruthy();
-        done();
-      });
-    });
-    test('Should emit an error listener', done => {
-      const localConfig = {
-        user: process.env.SQLUSER,
-        password: 'noGoodPassword',
-        server: process.env.SQLSERVER as string,
-        database: process.env.SQLDATABASE as string
-      };
-      const store = new MSSQLStore(localConfig, {
-        table: 'Sessions'
-      });
-      /**
-       * TODO -> THIS TEST FAILS TO RUN, ERROR EMITTER
-       * TODO -> FAILS TO BE CAUGHT
-       */
-      store.on('error', (error: any) => {
-        expect(error.databaseConnection._connected).toBeFalsy();
-        done();
-      });
-    });
-  });
-
   describe('Basic test suite', () => {
     const store = new MSSQLStore(sqlConfig, {
       table: 'Sessions'
@@ -197,6 +164,41 @@ describe('connect-mssql-v2', () => {
       store.databaseConnection!.close();
       store.get('asdf', err => {
         expect(err).toBeTruthy();
+        done();
+      });
+    });
+  });
+
+  describe('emitters test suite', () => {
+    test('Should emit a connect listener', done => {
+      const store = new MSSQLStore(sqlConfig, {
+        table: 'Sessions'
+      });
+      store.get('abcd', err => err);
+
+      store.on('connect', (connected: any) => {
+        expect(connected.databaseConnection._connected).toBeTruthy();
+        done();
+      });
+    });
+    test('Should emit an error listener', done => {
+      const localConfig = {
+        user: process.env.SQLUSER,
+        password: 'noGoodPassword',
+        server: process.env.SQLSERVER as string,
+        database: process.env.SQLDATABASE as string
+      };
+      const store = new MSSQLStore(localConfig, {
+        table: 'Sessions'
+      });
+
+      store.get('abcd', err => err);
+
+      store.on('error', (error: any) => {
+        expect(error.name).toEqual('ConnectionError');
+        expect(error.originalError.message).toEqual(
+          expect.stringContaining('Login failed')
+        );
         done();
       });
     });

@@ -72,12 +72,15 @@ const Store = (session: any) => {
     async initializeDatabase() {
       try {
         this.databaseConnection = new sql.ConnectionPool(this.config);
+        this.databaseConnection.on('connect', () => this.emit('connect', this));
+        this.databaseConnection.on('error', () => this.emit('error', this));
         await this.databaseConnection.connect();
-
+        this.databaseConnection.emit('connect');
         if (this.autoRemove) {
           setInterval(this.destroyExpired.bind(this), this.autoRemoveInterval);
         }
       } catch (error) {
+        (this.databaseConnection as ConnectionPool).emit('error');
         console.error(error);
         throw error;
       }

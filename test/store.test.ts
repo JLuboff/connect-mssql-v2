@@ -106,40 +106,47 @@ describe('connect-mssql-v2', () => {
   });
 
   describe('autoRemove test suite', () => {
-    // let cbed = false;
-    // const cb = () => (cbed = true);
+    let cbed = false;
+    const cb = () => (cbed = true);
     const store = new MSSQLStore(sqlConfig, {
       table: 'Sessions',
-      autoRemove: true
-      // autoRemoveCallback: cb
+      autoRemove: true,
+      autoRemoveCallback: cb
     });
 
     test('Should destroy all sessions', done => {
       setTimeout(() => {
         store.set(
           'a',
-          { cookie: { expires: new Date(Date.now() - 60000) } },
+          {
+            cookie: {
+              expires: new Date(Date.now() - 60000)
+            }
+          },
           (err: any) => {
             if (err) return done(err);
 
-            store.set(
+            return store.set(
               'b',
-              { cookie: { expires: new Date(Date.now() - 60000) } },
+              {
+                cookie: {
+                  expires: new Date(Date.now() - 60000)
+                }
+              },
               (err: any) => {
                 if (err) return done(err);
 
-                store.length((err, length) => {
+                return store.length((err, length) => {
                   if (err) return done(err);
                   expect(length).toBe(2);
 
-                  store.destroyExpired((err: any) => {
+                  return store.destroyExpired((err: any) => {
                     if (err) return done(err);
-
-                    store.length((err, length) => {
+                    return store.length((err, length) => {
                       if (err) return done(err);
 
                       expect(length).toBe(0);
-                      // expect(cbed).toBeTruthy();
+                      expect(cbed).toBeTruthy();
 
                       done();
                     });

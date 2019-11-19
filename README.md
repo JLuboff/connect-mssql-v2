@@ -21,10 +21,10 @@ CREATE TABLE [dbo].[sessions](
 ## Usage
 
 ```javascript
-var session = require('express-session');
-var MSSQLStore = require('connect-mssql-v2')(session);
+const session = require('express-session');
+const MSSQLStore = require('connect-mssql-v2')(session);
 
-var config = {
+const config = {
     user: '...',
     password: '...',
     server: 'localhost', // You can use 'localhost\\instance' to connect to named instance
@@ -51,9 +51,8 @@ app.use(session({
 - **options.useUTC** - Determines if we are to use the `GETUTCDATE` instead of `GETDATE` Default: `true`
 
 ### Advanced usage
-NOT SETUP
 ```javascript
-var store = new MSSQLStore(config, options);
+const store = new MSSQLStore(config, options);
 
 store.on('connect', function() {
 	// ... connection established

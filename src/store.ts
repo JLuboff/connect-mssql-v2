@@ -34,14 +34,14 @@ interface StoreOptions {
    */
   useUTC?: boolean;
 }
-type Errors = ConnectionError | null;
+type Errors = ConnectionError | Error | null;
 type GetCallback = (
   error: Errors,
   session?: Express.SessionData | null
 ) => void;
 type LengthCallback = (error: Errors, length?: number) => void;
-type CommonCallback = (args?: any[] | null) => void;
-type ReadyCallback = (err: Errors, cb?: any) => Promise<any>;
+type CommonCallback = (args?: any[] | null | Errors) => void;
+type ReadyCallback = (error: Errors, cb?: any) => Promise<any>;
 
 const Store = (session: any) => {
   const Store = session.Store || session.session.Store;
@@ -73,30 +73,31 @@ const Store = (session: any) => {
       try {
         this.databaseConnection = new sql.ConnectionPool(this.config);
         this.databaseConnection.on('connect', () => this.emit('connect', this));
-        this.databaseConnection.on('error', () => this.emit('error', this));
+        this.databaseConnection.on('error', error => this.emit('error', error));
         await this.databaseConnection.connect();
         this.databaseConnection.emit('connect');
         if (this.autoRemove) {
           setInterval(this.destroyExpired.bind(this), this.autoRemoveInterval);
         }
       } catch (error) {
-        (this.databaseConnection as ConnectionPool).emit('error');
-        console.error(error);
         throw error;
       }
     }
+
     private async ready(callback: ReadyCallback) {
-      await this.initializeDatabase();
-      if (this.databaseConnection && this.databaseConnection.connected) {
-        return callback.call(this, null, null);
+      try {
+        await this.initializeDatabase();
+        if (this.databaseConnection && this.databaseConnection.connected) {
+          return callback.call(this, null, null);
+        }
+        if (this.databaseConnection && this.databaseConnection.connecting) {
+          return this.databaseConnection.once('connect', callback.bind(this));
+        }
+        throw new Error('Connection is closed.') as ConnectionError;
+      } catch (error) {
+        this.databaseConnection!.emit('error', error);
+        return callback.call(this, error);
       }
-      if (this.databaseConnection && this.databaseConnection.connecting) {
-        return this.databaseConnection.once('connect', callback.bind(this));
-      }
-      callback.call(
-        this,
-        new Error('Connection is closed.') as ConnectionError
-      );
     }
     //////////////////////////////////////////////////////////////////
     // Attempt to fetch session the given sid
@@ -106,9 +107,9 @@ const Store = (session: any) => {
      */
     ////////////////////////////////////////////////////////////////
     get(sid: string, callback: GetCallback) {
-      this.ready(async (err: Errors) => {
-        if (err) {
-          throw err;
+      this.ready(async (error: Errors) => {
+        if (error) {
+          return callback(error);
         }
 
         try {
@@ -137,9 +138,9 @@ const Store = (session: any) => {
      */
     ////////////////////////////////////////////////////////////////
     set(sid: string, data: any, callback: CommonCallback) {
-      this.ready(async (err: Errors) => {
-        if (err) {
-          throw err;
+      this.ready(async (error: Errors) => {
+        if (error) {
+          return callback(error);
         }
 
         try {
@@ -180,9 +181,9 @@ const Store = (session: any) => {
       data: { cookie: { expires: Date } },
       callback: CommonCallback
     ) {
-      this.ready(async (err: Errors) => {
-        if (err) {
-          throw err;
+      this.ready(async (error: Errors) => {
+        if (error) {
+          return callback(error);
         }
 
         try {
@@ -212,9 +213,9 @@ const Store = (session: any) => {
      */
     ////////////////////////////////////////////////////////////////
     destroy(sid: string, callback: CommonCallback) {
-      this.ready(async (err: Errors) => {
-        if (err) {
-          throw err;
+      this.ready(async (error: Errors) => {
+        if (error) {
+          return callback(error);
         }
 
         try {
@@ -233,9 +234,9 @@ const Store = (session: any) => {
     // Destroy expired sessions
     ////////////////////////////////////////////////////////////////
     destroyExpired(callback: CommonCallback) {
-      this.ready(async (err: Errors) => {
-        if (err) {
-          throw err;
+      this.ready(async (error: Errors) => {
+        if (error) {
+          return callback(error);
         }
 
         try {
@@ -249,8 +250,8 @@ const Store = (session: any) => {
             : callback();
         } catch (error) {
           return this.autoRemoveCallback
-            ? this.autoRemoveCallback(err)
-            : callback(err);
+            ? this.autoRemoveCallback(error)
+            : callback(error);
         }
       });
     }
@@ -261,9 +262,9 @@ const Store = (session: any) => {
      */
     ////////////////////////////////////////////////////////////////
     length(callback: LengthCallback) {
-      this.ready(async (err: Errors) => {
-        if (err) {
-          throw err;
+      this.ready(async (error: Errors) => {
+        if (error) {
+          return callback(error);
         }
 
         try {
@@ -285,9 +286,9 @@ const Store = (session: any) => {
      */
     ////////////////////////////////////////////////////////////////
     clear(callback: CommonCallback) {
-      this.ready(async (err: Errors) => {
-        if (err) {
-          throw err;
+      this.ready(async (error: Errors) => {
+        if (error) {
+          return callback(error);
         }
 
         try {

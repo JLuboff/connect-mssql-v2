@@ -245,13 +245,15 @@ const Store = (session: any) => {
               DELETE FROM ${this.table} 
               WHERE expires <= GET${this.useUTC ? 'UTC' : ''}DATE()`);
 
-          return this.autoRemoveCallback
-            ? this.autoRemoveCallback()
-            : callback();
+          if (this.autoRemoveCallback) {
+            this.autoRemoveCallback();
+          }
+          return callback();
         } catch (error) {
-          return this.autoRemoveCallback
-            ? this.autoRemoveCallback(error)
-            : callback(error);
+          if (this.autoRemoveCallback) {
+            this.autoRemoveCallback(error);
+          }
+          return callback(error);
         }
       });
     }

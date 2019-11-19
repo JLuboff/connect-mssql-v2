@@ -25,20 +25,22 @@ const session = require('express-session');
 const MSSQLStore = require('connect-mssql-v2')(session);
 
 const config = {
-    user: '...',
-    password: '...',
-    server: 'localhost', // You can use 'localhost\\instance' to connect to named instance
-    database: '...',
-    
-    options: {
-        encrypt: true // Use this if you're on Windows Azure
-    }
-}
+  user: '...',
+  password: '...',
+  server: 'localhost', // You can use 'localhost\\instance' to connect to named instance
+  database: '...',
 
-app.use(session({
+  options: {
+    encrypt: true // Use this if you're on Windows Azure
+  }
+};
+
+app.use(
+  session({
     store: new MSSQLStore(config, options), // options are optional
     secret: 'supersecret'
-}));
+  })
+);
 ```
 
 ### Options
@@ -47,10 +49,11 @@ app.use(session({
 - **options.ttl** - (Time To Live) Determines the expiration date. Default: `1000 * 60 * 60 * 24` (24 hours)
 - **options.autoRemove** - Determines if expired sessions should be autoremoved or not. If value is `true` then a new function, `destroyExpired()`, will autodelete expired sessions on a set interval. Default: `false`
 - **options.autoRemoveInterval** - Sets the timer interval for each call to `destroyExpired()`. Default: `1000 * 60 * 10` (10 min)
-- **options.autoRemoveCallback** - (NOT CURRENTLY TESTED) Is the callback function for `destroyExpired()`. Default: `undefined`
+- **options.autoRemoveCallback** - Is the callback function for `destroyExpired()`. Default: `undefined`
 - **options.useUTC** - Determines if we are to use the `GETUTCDATE` instead of `GETDATE` Default: `true`
 
 ### Advanced usage
+
 ```javascript
 const store = new MSSQLStore(config, options);
 
@@ -71,8 +74,6 @@ app.use(session({
 ## Configuration
 
 To see all options please visit [node-mssql docs](https://github.com/patriksimek/node-mssql#cfg-basic).
-
-
 
 ## License
 

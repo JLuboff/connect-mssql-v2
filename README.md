@@ -1,6 +1,6 @@
 # connect-mssql-v2
 
-SQL Server session store for Connect/Express based on [![Github Stars][mssql-image] node-mssql][mssql-url].
+SQL Server session store for Connect/Express based on [![Github Stars][mssql-image] node-mssql][mssql-url] and the deprecated/abandon project [![Github Stars][connect-mssql-image] connect-mssql][connect-mssql-url].
 
 ## Installation
 
@@ -101,3 +101,5 @@ SOFTWARE.
 
 [mssql-url]: https://github.com/patriksimek/node-mssql
 [mssql-image]: https://img.shields.io/github/stars/patriksimek/node-mssql.svg?style=flat-square&label=%E2%98%85
+[connect-mssql-url]: https://github.com/patriksimek/connect-mssql
+[connect-mssql-image]: https://img.shields.io/github/stars/patriksimek/connect-mssql.svg?style=flat-square&label=%E2%98%85

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "MS SQL Server session store for Express Session",
   "main": "dist/store.js",
-  "types": "dist/store.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest --watch ./dist/test"
   },

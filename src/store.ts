@@ -7,7 +7,7 @@ import sql, {
   ConnectionError
 } from 'mssql';
 
-interface StoreOptions {
+export interface StoreOptions {
   /**
    * Table to use as session store. Default: `[sessions]`
    */
@@ -34,18 +34,38 @@ interface StoreOptions {
    */
   useUTC?: boolean;
 }
-type Errors = ConnectionError | Error | null;
-type GetCallback = (
+export type Cookie = { cookie: { expires: Date } };
+export type Errors = ConnectionError | Error | null;
+export type GetCallback = (
   error: Errors,
   session?: Express.SessionData | null
 ) => void;
-type LengthCallback = (error: Errors, length?: number) => void;
-type CommonCallback = (args?: any[] | null | Errors) => void;
-type ReadyCallback = (error: Errors, cb?: any) => Promise<any>;
+export type LengthCallback = (error: Errors, length?: number) => void;
+export type CommonCallback = (args?: any[] | null | Errors) => void;
+export type ReadyCallback = (error: Errors, cb?: any) => Promise<any>;
 
-const Store = (session: any) => {
+export interface IMSSQLStore {
+  table: string;
+  ttl: number;
+  autoRemove: boolean;
+  autoRemoveInterval: number;
+  autoRemoveCallback?: (props?: any) => any;
+  useUTC: boolean;
+  config: SQLConfig;
+  databaseConnection: ConnectionPool | null;
+  initializeDatabase(): void;
+  get(sid: string, callback: GetCallback): void;
+  set(sid: string, data: any, callback: CommonCallback): void;
+  touch(sid: string, data: Cookie, callback: CommonCallback): void;
+  destroy(sid: string, callback: CommonCallback): void;
+  destroyExpired(callback: CommonCallback): void;
+  length(callback: LengthCallback): void;
+  clear(callback: CommonCallback): void;
+}
+
+const Store = (session: any): any => {
   const Store = session.Store || session.session.Store;
-  class MSSQLStore extends Store {
+  class MSSQLStore extends Store implements IMSSQLStore {
     table: string;
     ttl: number;
     autoRemove: boolean;
@@ -305,7 +325,7 @@ const Store = (session: any) => {
       });
     }
   }
-  return MSSQLStore;
+  return MSSQLStore
 };
 
 export default Store;

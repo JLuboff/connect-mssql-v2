@@ -96,7 +96,7 @@ describe('connect-mssql-v2', () => {
       store.destroy('1234ABC', done);
     });
     test('Should have no sessions in the database', done => {
-      store.length((err, length) => {
+      store.length((err: any, length: number) => {
         if (err) return done(err);
 
         expect(length).toBe(0);
@@ -136,13 +136,13 @@ describe('connect-mssql-v2', () => {
               (err: any) => {
                 if (err) return done(err);
 
-                return store.length((err, length) => {
+                return store.length((err: any, length: number) => {
                   if (err) return done(err);
                   expect(length).toBe(2);
 
                   return store.destroyExpired((err: any) => {
                     if (err) return done(err);
-                    return store.length((err, length) => {
+                    return store.length((err: any, length: number) => {
                       if (err) return done(err);
 
                       expect(length).toBe(0);
@@ -169,7 +169,7 @@ describe('connect-mssql-v2', () => {
     });
     test('Should report error when connection is closed', done => {
       store.databaseConnection!.close();
-      store.get('asdf', err => {
+      store.get('asdf', (err: any) => {
         expect(err).toBeTruthy();
         done();
       });
@@ -181,7 +181,7 @@ describe('connect-mssql-v2', () => {
       const store = new MSSQLStore(sqlConfig, {
         table: 'Sessions'
       });
-      store.get('abcd', err => err);
+      store.get('abcd', (err: any) => err);
 
       store.on('connect', (connected: any) => {
         expect(connected.databaseConnection._connected).toBeTruthy();
@@ -199,7 +199,7 @@ describe('connect-mssql-v2', () => {
         table: 'Sessions'
       });
 
-      store.get('abcd', err => err);
+      store.get('abcd', (err: any) => err);
 
       store.on('error', (error: any) => {
         expect(error.name).toEqual('ConnectionError');

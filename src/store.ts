@@ -6,66 +6,19 @@ import sql, {
   ConnectionPool,
   ConnectionError
 } from 'mssql';
+import {
+  StoreOptions,
+  IMSSQLStore,
+  ReadyCallback,
+  GetCallback,
+  Errors,
+  CommonCallback,
+  LengthCallback
+} from './index';
 
-export interface StoreOptions {
-  /**
-   * Table to use as session store. Default: `[sessions]`
-   */
-  table?: string;
-  /**
-   * (Time To Live) Determines the expiration date. Default: `1000 * 60 * 60 * 24` (24 hours)
-   */
-  ttl?: number;
-  /**
-   * Determines if expired sessions should be autoremoved or not. If value is `true` then a new function, `destroyExpired()`,
-   * will autodelete expired sessions on a set interval. Default: `false`
-   */
-  autoRemove?: boolean;
-  /**
-   * Sets the timer interval for each call to `destroyExpired()`. Default: `1000 * 60 * 10` (10 min)
-   */
-  autoRemoveInterval?: number;
-  /**
-   * (NOT CURRENTLY TESTED) Is the callback function for `destroyExpired()`. Default: `undefined`
-   */
-  autoRemoveCallback?: (props: any) => any;
-  /**
-   * Determines if we are to use the `GETUTCDATE` instead of `GETDATE` Default: `true`
-   */
-  useUTC?: boolean;
-}
-export type Cookie = { cookie: { expires: Date } };
-export type Errors = ConnectionError | Error | null;
-export type GetCallback = (
-  error: Errors,
-  session?: Express.SessionData | null
-) => void;
-export type LengthCallback = (error: Errors, length?: number) => void;
-export type CommonCallback = (args?: any[] | null | Errors) => void;
-export type ReadyCallback = (error: Errors, cb?: any) => Promise<any>;
-
-export interface IMSSQLStore {
-  table: string;
-  ttl: number;
-  autoRemove: boolean;
-  autoRemoveInterval: number;
-  autoRemoveCallback?: (props?: any) => any;
-  useUTC: boolean;
-  config: SQLConfig;
-  databaseConnection: ConnectionPool | null;
-  initializeDatabase(): void;
-  get(sid: string, callback: GetCallback): void;
-  set(sid: string, data: any, callback: CommonCallback): void;
-  touch(sid: string, data: Cookie, callback: CommonCallback): void;
-  destroy(sid: string, callback: CommonCallback): void;
-  destroyExpired(callback: CommonCallback): void;
-  length(callback: LengthCallback): void;
-  clear(callback: CommonCallback): void;
-}
-
-const Store = (session: any): any => {
+const Store = (session: any) => {
   const Store = session.Store || session.session.Store;
-  class MSSQLStore extends Store implements IMSSQLStore {
+  return class MSSQLStore extends Store implements IMSSQLStore {
     table: string;
     ttl: number;
     autoRemove: boolean;
@@ -324,8 +277,7 @@ const Store = (session: any): any => {
         }
       });
     }
-  }
-  return MSSQLStore
+  };
 };
 
 export default Store;

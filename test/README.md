@@ -22,4 +22,5 @@ SQLSERVER=YourSQLServer
 SQLDATABASE=YourSQLTestDatabase
 ```
 - Run tsc to build project
+- Move or copy .env file to dist/test folder
 - Run `npm test`

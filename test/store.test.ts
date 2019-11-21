@@ -96,7 +96,7 @@ describe('connect-mssql-v2', () => {
       store.destroy('1234ABC', done);
     });
     test('Should have no sessions in the database', done => {
-      store.length((err, length) => {
+      store.length((err: any, length: number) => {
         if (err) return done(err);
 
         expect(length).toBe(0);
@@ -136,13 +136,13 @@ describe('connect-mssql-v2', () => {
               (err: any) => {
                 if (err) return done(err);
 
-                return store.length((err, length) => {
+                return store.length((err: any, length: number) => {
                   if (err) return done(err);
                   expect(length).toBe(2);
 
                   return store.destroyExpired((err: any) => {
                     if (err) return done(err);
-                    return store.length((err, length) => {
+                    return store.length((err: any, length: number) => {
                       if (err) return done(err);
 
                       expect(length).toBe(0);

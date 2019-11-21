@@ -56,7 +56,6 @@ export interface IMSSQLStore {
   config: SQLConfig;
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
-  initializeDatabase(): void;
   get(sid: string, callback: GetCallback): void;
   set(sid: string, data: any, callback: CommonCallback): void;
   touch(sid: string, data: Cookie, callback: CommonCallback): void;
@@ -75,7 +74,7 @@ const Store = (session: any): any => {
     autoRemoveCallback?: (props?: any) => any;
     useUTC: boolean;
     config: SQLConfig;
-    databaseConnection: ConnectionPool | null;
+    databaseConnection: ConnectionPool;
 
     constructor(config: SQLConfig, options?: StoreOptions) {
       super();
@@ -88,12 +87,11 @@ const Store = (session: any): any => {
         (options && options.autoRemoveCallback) || undefined;
       this.useUTC = (options && options.useUTC) || true;
       this.config = config;
-      this.databaseConnection = null;
+      this.databaseConnection = new sql.ConnectionPool(config);
     }
 
-    async initializeDatabase() {
+    private async initializeDatabase() {
       try {
-        this.databaseConnection = new sql.ConnectionPool(this.config);
         this.databaseConnection.on('connect', () => this.emit('connect', this));
         this.databaseConnection.on('error', error => this.emit('error', error));
         await this.databaseConnection.connect();
@@ -108,7 +106,12 @@ const Store = (session: any): any => {
 
     private async ready(callback: ReadyCallback) {
       try {
-        await this.initializeDatabase();
+        if (
+          !this.databaseConnection.connected &&
+          !this.databaseConnection.connecting
+        ) {
+          await this.initializeDatabase();
+        }
         if (this.databaseConnection && this.databaseConnection.connected) {
           return callback.call(this, null, null);
         }

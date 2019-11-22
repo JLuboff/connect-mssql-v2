@@ -6,6 +6,8 @@ import sql, {
   ConnectionPool,
   ConnectionError
 } from 'mssql';
+import { Store as ExpressSessionStore } from 'express-session';
+import { Express } from 'express';
 
 export interface StoreOptions {
   /**
@@ -56,8 +58,20 @@ export interface IMSSQLStore {
   length(callback: LengthCallback): void;
   clear(callback: CommonCallback): void;
 }
-const Store = (session: any): any => {
-  const Store: any = session.Store || session.session.Store;
+type TypeofExpressSessionStoreObject = { Store: TypeofExpressSessionStore };
+type TypeofExpressSessionStore = typeof ExpressSessionStore;
+
+const Store = (
+  session:
+    | TypeofExpressSessionStoreObject
+    | { session: TypeofExpressSessionStoreObject }
+): any => {
+  // **note** this is cast to any due to multiple issues with the express-session types
+  // See https://github.com/JLuboff/connect-mssql-v2/issues/10
+
+  const Store: any =
+    (session as TypeofExpressSessionStoreObject).Store || (session as {session: TypeofExpressSessionStoreObject}).session.Store;
+
   class MSSQLStore extends Store implements IMSSQLStore {
     table: string;
     ttl: number;
@@ -150,11 +164,11 @@ const Store = (session: any): any => {
     /**
      *
      * @param sid
-     * @param data
+     * @param session
      * @param callback
      */
     ////////////////////////////////////////////////////////////////
-    set(sid: string, data: any, callback: CommonCallback) {
+    set(sid: string, session: Express.SessionData, callback: CommonCallback) {
       this.ready(async (error: Errors) => {
         if (error) {
           return callback(error);
@@ -162,12 +176,14 @@ const Store = (session: any): any => {
 
         try {
           const expires = new Date(
-            (data.cookie && data.cookie.expires) || Date.now() + this.ttl
+            // **note** is this safe? expires could be boolean or date, and not all situations are supported
+            // by the date constructor. 
+            ((session.cookie && session.cookie.expires) || Date.now() + this.ttl) as any
           );
           const request = (this.databaseConnection as ConnectionPool).request();
           await request
             .input('sid', NVarChar(255), sid)
-            .input('session', NVarChar(MAX), JSON.stringify(data))
+            .input('session', NVarChar(MAX), JSON.stringify(session))
             .input('expires', DateTime, expires).query(`
               UPDATE ${this.table} 
                 SET session = @session, expires = @expires 

@@ -6,15 +6,7 @@ import sql, {
   ConnectionPool,
   ConnectionError
 } from 'mssql';
-// import {
-//   StoreOptions,
-//   IMSSQLStore,
-//   ReadyCallback,
-//   GetCallback,
-//   Errors,
-//   CommonCallback,
-//   LengthCallback
-// } from './index';
+
 export interface StoreOptions {
   /**
    * Table to use as session store. Default: `[sessions]`

@@ -36,7 +36,6 @@ export interface StoreOptions {
    */
   useUTC?: boolean;
 }
-export type Cookie = { cookie: { expires: Date } };
 export type Errors = ConnectionError | Error | null;
 export type GetCallback = (
   error: Errors,
@@ -51,8 +50,16 @@ export interface IMSSQLStore {
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
   get(sid: string, callback: GetCallback): void;
-  set(sid: string, data: any, callback: CommonCallback): void;
-  touch(sid: string, data: Cookie, callback: CommonCallback): void;
+  set(
+    sid: string,
+    session: Express.SessionData,
+    callback: CommonCallback
+  ): void;
+  touch(
+    sid: string,
+    session: Express.SessionData,
+    callback: CommonCallback
+  ): void;
   destroy(sid: string, callback: CommonCallback): void;
   destroyExpired(callback: CommonCallback): void;
   length(callback: LengthCallback): void;
@@ -70,7 +77,8 @@ const Store = (
   // See https://github.com/JLuboff/connect-mssql-v2/issues/10
 
   const Store: any =
-    (session as TypeofExpressSessionStoreObject).Store || (session as {session: TypeofExpressSessionStoreObject}).session.Store;
+    (session as TypeofExpressSessionStoreObject).Store ||
+    (session as { session: TypeofExpressSessionStoreObject }).session.Store;
 
   class MSSQLStore extends Store implements IMSSQLStore {
     table: string;
@@ -175,10 +183,15 @@ const Store = (
         }
 
         try {
+          // Verify session.cookie.expires is not a boolean
+          // If so, use current time along with ttl else
+          // cast session.cookie.expires to Date to avoid TS error
+          const isExpireBoolean =
+            !!session.cookie && typeof session.cookie.expires === 'boolean';
           const expires = new Date(
-            // **note** is this safe? expires could be boolean or date, and not all situations are supported
-            // by the date constructor. 
-            ((session.cookie && session.cookie.expires) || Date.now() + this.ttl) as any
+            isExpireBoolean || !(session.cookie && session.cookie.expires)
+              ? Date.now() + this.ttl
+              : (session.cookie.expires as Date)
           );
           const request = (this.databaseConnection as ConnectionPool).request();
           await request
@@ -209,19 +222,22 @@ const Store = (
      * @param callback
      */
     ////////////////////////////////////////////////////////////////
-    touch(
-      sid: string,
-      data: { cookie: { expires: Date } },
-      callback: CommonCallback
-    ) {
+    touch(sid: string, session: Express.SessionData, callback: CommonCallback) {
       this.ready(async (error: Errors) => {
         if (error) {
           return callback(error);
         }
 
         try {
+          // Verify session.cookie.expires is not a boolean
+          // If so, use current time along with ttl else
+          // cast session.cookie.expires to Date to avoid TS error
+          const isExpireBoolean =
+            !!session.cookie && typeof session.cookie.expires === 'boolean';
           const expires = new Date(
-            (data.cookie && data.cookie.expires) || Date.now() + this.ttl
+            isExpireBoolean || !(session.cookie && session.cookie.expires)
+              ? Date.now() + this.ttl
+              : (session.cookie.expires as Date)
           );
           const request = (this.databaseConnection as ConnectionPool).request();
           await request

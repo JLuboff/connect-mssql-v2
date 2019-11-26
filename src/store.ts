@@ -106,8 +106,11 @@ const Store = (
 
     private async initializeDatabase() {
       try {
+        // Emits on successful connection
         this.databaseConnection.on('connect', () => this.emit('connect', this));
+        // Emits on failed connection
         this.databaseConnection.on('error', error => this.emit('error', error));
+        // Emits on error of any store error and includes method where error occured
         this.databaseConnection.on('sessionError', (error, method) =>
           this.emit('sessionError', error, method)
         );
@@ -168,8 +171,8 @@ const Store = (
           return callback(null, null);
         } catch (error) {
           this.databaseConnection.emit('sessionError', error, 'get');
-          if(callback){
-            return callback(error)
+          if (callback) {
+            return callback(error);
           }
         }
       });
@@ -218,8 +221,8 @@ const Store = (
           return callback();
         } catch (error) {
           this.databaseConnection.emit('sessionError', error, 'set');
-          if(callback){
-            return callback(error)
+          if (callback) {
+            return callback(error);
           }
         }
       });
@@ -261,8 +264,8 @@ const Store = (
           return callback();
         } catch (error) {
           this.databaseConnection.emit('sessionError', error, 'touch');
-          if(callback){
-            return callback(error)
+          if (callback) {
+            return callback(error);
           }
         }
       });
@@ -290,8 +293,8 @@ const Store = (
           return callback();
         } catch (error) {
           this.databaseConnection.emit('sessionError', error, 'destroy');
-          if(callback){
-            return callback(error)
+          if (callback) {
+            return callback(error);
           }
         }
       });
@@ -320,8 +323,8 @@ const Store = (
             this.autoRemoveCallback(error);
           }
           this.databaseConnection.emit('sessionError', error, 'destroyExpired');
-          if(callback){
-            return callback(error)
+          if (callback) {
+            return callback(error);
           }
         }
       });
@@ -347,8 +350,8 @@ const Store = (
           return callback(null, result.recordset[0].length);
         } catch (error) {
           this.databaseConnection.emit('sessionError', error, 'length');
-          if(callback){
-            return callback(error)
+          if (callback) {
+            return callback(error);
           }
         }
       });
@@ -373,8 +376,8 @@ const Store = (
           return callback();
         } catch (error) {
           this.databaseConnection.emit('sessionError', error, 'clear');
-          if(callback){
-            return callback(error)
+          if (callback) {
+            return callback(error);
           }
         }
       });

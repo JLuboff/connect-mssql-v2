@@ -209,5 +209,6 @@ describe('connect-mssql-v2', () => {
         done();
       });
     });
+    test.todo('Should emit session error listener')
   });
 });

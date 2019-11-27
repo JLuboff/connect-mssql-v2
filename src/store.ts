@@ -146,6 +146,17 @@ const Store = (
         }
       }
     }
+
+    errorHandler(
+      method: string,
+      error: Errors,
+      callback?: CommonCallback | GetCallback | LengthCallback | ReadyCallback
+    ) {
+      this.databaseConnection.emit('sessionError', error, method);
+      if (callback) {
+        return callback(error);
+      }
+    }
     //////////////////////////////////////////////////////////////////
     // Attempt to fetch session the given sid
     /**
@@ -170,10 +181,7 @@ const Store = (
 
           return callback(null, null);
         } catch (error) {
-          this.databaseConnection.emit('sessionError', error, 'get');
-          if (callback) {
-            return callback(error);
-          }
+          this.errorHandler('get', error, callback);
         }
       });
     }
@@ -220,10 +228,7 @@ const Store = (
 
           return callback();
         } catch (error) {
-          this.databaseConnection.emit('sessionError', error, 'set');
-          if (callback) {
-            return callback(error);
-          }
+          this.errorHandler('set', error, callback);
         }
       });
     }
@@ -263,10 +268,7 @@ const Store = (
 
           return callback();
         } catch (error) {
-          this.databaseConnection.emit('sessionError', error, 'touch');
-          if (callback) {
-            return callback(error);
-          }
+          this.errorHandler('touch', error, callback);
         }
       });
     }
@@ -292,10 +294,7 @@ const Store = (
 
           return callback();
         } catch (error) {
-          this.databaseConnection.emit('sessionError', error, 'destroy');
-          if (callback) {
-            return callback(error);
-          }
+          this.errorHandler('destroy', error, callback);
         }
       });
     }
@@ -322,10 +321,7 @@ const Store = (
           if (this.autoRemoveCallback) {
             this.autoRemoveCallback(error);
           }
-          this.databaseConnection.emit('sessionError', error, 'destroyExpired');
-          if (callback) {
-            return callback(error);
-          }
+          this.errorHandler('destroyExpired', error, callback);
         }
       });
     }
@@ -349,10 +345,7 @@ const Store = (
 
           return callback(null, result.recordset[0].length);
         } catch (error) {
-          this.databaseConnection.emit('sessionError', error, 'length');
-          if (callback) {
-            return callback(error);
-          }
+          this.errorHandler('length', error, callback);
         }
       });
     }
@@ -375,10 +368,7 @@ const Store = (
 
           return callback();
         } catch (error) {
-          this.databaseConnection.emit('sessionError', error, 'clear');
-          if (callback) {
-            return callback(error);
-          }
+          this.errorHandler('clear', error, callback);
         }
       });
     }

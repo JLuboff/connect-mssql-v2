@@ -49,6 +49,11 @@ export interface IMSSQLStore {
   config: SQLConfig;
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
+  errorHandler(
+    method: string,
+    error: Errors,
+    callback?: CommonCallback | GetCallback | LengthCallback | ReadyCallback
+  ): void | Promise<any>;
   get(sid: string, callback: GetCallback): void;
   set(
     sid: string,
@@ -106,14 +111,11 @@ const Store = (
 
     private async initializeDatabase() {
       try {
-        // Emits on successful connection
+        // Attachs connect event listener and emits on successful connection
         this.databaseConnection.on('connect', () => this.emit('connect', this));
-        // Emits on failed connection
+        // Attachs error event listener and emits on failed connection
         this.databaseConnection.on('error', error => this.emit('error', error));
-        // Emits on error of any store error and includes method where error occured
-        this.databaseConnection.on('sessionError', (error, method) =>
-          this.emit('sessionError', error, method)
-        );
+
         await this.databaseConnection.connect();
         this.databaseConnection.emit('connect');
         if (this.autoRemove) {
@@ -152,6 +154,12 @@ const Store = (
       error: Errors,
       callback?: CommonCallback | GetCallback | LengthCallback | ReadyCallback
     ) {
+      // Attachs sessionError event listener and emits on error on any
+      // store error and includes method where error occured
+      this.databaseConnection.on('sessionError', (error, method) =>
+        this.emit('sessionError', error, method)
+      );
+
       this.databaseConnection.emit('sessionError', error, method);
       if (callback) {
         return callback(error);

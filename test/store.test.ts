@@ -188,6 +188,28 @@ describe('connect-mssql-v2', () => {
         done();
       });
     });
+
+    test('Should emit sessionError listener', done => {
+      const store = new MSSQLStore(sqlConfig, {
+        table: 'Sessions'
+      });
+
+      store.on('sessionError', (error: any, method: string) => {
+        expect(method).toEqual('test');
+        expect(error).toBeInstanceOf(Error);
+
+        done();
+      });
+
+      const errorHandler = store.errorHandler(
+        'test',
+        new Error('Test errorHandler'),
+        () => true
+      );
+
+      expect(errorHandler).toBeTruthy();
+    });
+
     test('Should emit an error listener', done => {
       const localConfig = {
         user: process.env.SQLUSER,
@@ -209,6 +231,5 @@ describe('connect-mssql-v2', () => {
         done();
       });
     });
-    test.todo('Should emit session error listener')
   });
 });

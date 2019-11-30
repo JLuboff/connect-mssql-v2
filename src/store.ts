@@ -159,8 +159,8 @@ const Store = (
       this.databaseConnection.on('sessionError', (error, method) =>
         this.emit('sessionError', error, method)
       );
-
       this.databaseConnection.emit('sessionError', error, method);
+
       if (callback) {
         return callback(error);
       }
@@ -186,7 +186,7 @@ const Store = (
           if (result.recordset.length) {
             return callback(null, JSON.parse(result.recordset[0].session));
           }
-
+          
           return callback(null, null);
         } catch (error) {
           this.errorHandler('get', error, callback);

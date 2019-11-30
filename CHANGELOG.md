@@ -2,7 +2,9 @@
 All project updates will be documented in this file
 
 ## [Unreleased]
-
+[-sessionError event handler
+    -Seperate errorHandler method
+    ]
 ## [v1.1.0] - 2019-11-22
 - Typings updated [bf08351]
     - data property changed to session, use Express.SessionData type

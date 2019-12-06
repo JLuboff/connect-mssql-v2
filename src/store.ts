@@ -1,13 +1,14 @@
+/* eslint-disable no-useless-catch */
 import sql, {
   config as SQLConfig,
   NVarChar,
   MAX,
   DateTime,
   ConnectionPool,
-  ConnectionError
+  ConnectionError,
 } from 'mssql';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { Store as ExpressSessionStore } from 'express-session';
-import { Express } from 'express';
 
 export interface StoreOptions {
   /**
@@ -19,7 +20,8 @@ export interface StoreOptions {
    */
   ttl?: number;
   /**
-   * Determines if expired sessions should be autoremoved or not. If value is `true` then a new function, `destroyExpired()`,
+   * Determines if expired sessions should be autoremoved or not.
+   * If value is `true` then a new function, `destroyExpired()`,
    * will autodelete expired sessions on a set interval. Default: `false`
    */
   autoRemove?: boolean;
@@ -49,11 +51,6 @@ export interface IMSSQLStore {
   config: SQLConfig;
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
-  errorHandler(
-    method: string,
-    error: Errors,
-    callback?: CommonCallback | GetCallback | LengthCallback | ReadyCallback
-  ): void | Promise<any>;
   get(sid: string, callback: GetCallback): void;
   set(
     sid: string,
@@ -74,25 +71,31 @@ type TypeofExpressSessionStoreObject = { Store: TypeofExpressSessionStore };
 type TypeofExpressSessionStore = typeof ExpressSessionStore;
 
 const Store = (
-  session:
-    | TypeofExpressSessionStoreObject
-    | { session: TypeofExpressSessionStoreObject }
+  sessionData:
+  | TypeofExpressSessionStoreObject
+  | { session: TypeofExpressSessionStoreObject },
 ): any => {
   // **note** this is cast to any due to multiple issues with the express-session types
   // See https://github.com/JLuboff/connect-mssql-v2/issues/10
 
-  const Store: any =
-    (session as TypeofExpressSessionStoreObject).Store ||
-    (session as { session: TypeofExpressSessionStoreObject }).session.Store;
+  const SessionStore: any = (sessionData as TypeofExpressSessionStoreObject).Store
+    || (sessionData as { session: TypeofExpressSessionStoreObject }).session.Store;
 
-  class MSSQLStore extends Store implements IMSSQLStore {
+  class MSSQLStore extends SessionStore implements IMSSQLStore {
     table: string;
+
     ttl: number;
+
     autoRemove: boolean;
+
     autoRemoveInterval: number;
+
     autoRemoveCallback?: (props?: any) => any;
+
     useUTC: boolean;
+
     config: SQLConfig;
+
     databaseConnection: ConnectionPool;
 
     constructor(config: SQLConfig, options?: StoreOptions) {
@@ -100,10 +103,8 @@ const Store = (
       this.table = (options && options.table) || 'sessions';
       this.ttl = (options && options.ttl) || 1000 * 60 * 60 * 24;
       this.autoRemove = (options && options.autoRemove) || false;
-      this.autoRemoveInterval =
-        (options && options.autoRemoveInterval) || 1000 * 60 * 10;
-      this.autoRemoveCallback =
-        (options && options.autoRemoveCallback) || undefined;
+      this.autoRemoveInterval = (options && options.autoRemoveInterval) || 1000 * 60 * 10;
+      this.autoRemoveCallback = (options && options.autoRemoveCallback) || undefined;
       this.useUTC = (options && options.useUTC) || true;
       this.config = config;
       this.databaseConnection = new sql.ConnectionPool(config);
@@ -114,7 +115,7 @@ const Store = (
         // Attachs connect event listener and emits on successful connection
         this.databaseConnection.on('connect', () => this.emit('connect', this));
         // Attachs error event listener and emits on failed connection
-        this.databaseConnection.on('error', error => this.emit('error', error));
+        this.databaseConnection.on('error', (error) => this.emit('error', error));
 
         await this.databaseConnection.connect();
         this.databaseConnection.emit('connect');
@@ -129,8 +130,8 @@ const Store = (
     private async ready(callback: ReadyCallback) {
       try {
         if (
-          !this.databaseConnection.connected &&
-          !this.databaseConnection.connecting
+          !this.databaseConnection.connected
+          && !this.databaseConnection.connecting
         ) {
           await this.initializeDatabase();
         }
@@ -140,42 +141,41 @@ const Store = (
         if (this.databaseConnection && this.databaseConnection.connecting) {
           return this.databaseConnection.once('connect', callback.bind(this));
         }
-        throw new Error('Connection is closed.') as ConnectionError;
+        throw new Error('Connection is closed.');
       } catch (error) {
-        this.databaseConnection!.emit('error', error);
         if (callback) {
-          return callback.call(this, error);
+          callback.call(this, error);
         }
+        return this.databaseConnection!.emit('error', error);
       }
     }
 
     errorHandler(
       method: string,
       error: Errors,
-      callback?: CommonCallback | GetCallback | LengthCallback | ReadyCallback
+      callback?: CommonCallback | GetCallback | LengthCallback | ReadyCallback,
     ) {
+      if (callback) {
+        callback(error);
+      }
       // Attachs sessionError event listener and emits on error on any
       // store error and includes method where error occured
-      this.databaseConnection.on('sessionError', (error, method) =>
-        this.emit('sessionError', error, method)
-      );
-      this.databaseConnection.emit('sessionError', error, method);
-
-      if (callback) {
-        return callback(error);
-      }
+      // eslint-disable-next-line no-shadow
+      this.databaseConnection.on('sessionError', (error, method) => this.emit('sessionError', error, method));
+      return this.databaseConnection.emit('sessionError', error, method);
     }
-    //////////////////////////////////////////////////////////////////
+
+    // ////////////////////////////////////////////////////////////////
     // Attempt to fetch session the given sid
     /**
      * @param sid
      * @param callback
      */
-    ////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////
     get(sid: string, callback: GetCallback) {
       this.ready(async (error: Errors) => {
         if (error) {
-          throw error;
+          return callback(error);
         }
 
         try {
@@ -186,14 +186,15 @@ const Store = (
           if (result.recordset.length) {
             return callback(null, JSON.parse(result.recordset[0].session));
           }
-          
+
           return callback(null, null);
-        } catch (error) {
-          this.errorHandler('get', error, callback);
+        } catch (err) {
+          return this.errorHandler('get', err, callback);
         }
       });
     }
-    //////////////////////////////////////////////////////////////////
+
+    // ////////////////////////////////////////////////////////////////
     // Commit the given session object associated
     // with the given sid
     /**
@@ -202,23 +203,22 @@ const Store = (
      * @param session
      * @param callback
      */
-    ////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////
     set(sid: string, session: Express.SessionData, callback: CommonCallback) {
       this.ready(async (error: Errors) => {
         if (error) {
-          throw error;
+          return callback(error);
         }
 
         try {
           // Verify session.cookie.expires is not a boolean
           // If so, use current time along with ttl else
           // cast session.cookie.expires to Date to avoid TS error
-          const isExpireBoolean =
-            !!session.cookie && typeof session.cookie.expires === 'boolean';
+          const isExpireBoolean = !!session.cookie && typeof session.cookie.expires === 'boolean';
           const expires = new Date(
             isExpireBoolean || !(session.cookie && session.cookie.expires)
               ? Date.now() + this.ttl
-              : (session.cookie.expires as Date)
+              : (session.cookie.expires as Date),
           );
           const request = (this.databaseConnection as ConnectionPool).request();
           await request
@@ -235,12 +235,13 @@ const Store = (
                   END;`);
 
           return callback();
-        } catch (error) {
-          this.errorHandler('set', error, callback);
+        } catch (err) {
+          return this.errorHandler('set', err, callback);
         }
       });
     }
-    //////////////////////////////////////////////////////////////////
+
+    // ////////////////////////////////////////////////////////////////
     // Update the expiration date of the given sid
     /**
      *
@@ -248,23 +249,22 @@ const Store = (
      * @param data
      * @param callback
      */
-    ////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////
     touch(sid: string, session: Express.SessionData, callback: CommonCallback) {
       this.ready(async (error: Errors) => {
         if (error) {
-          throw error;
+          return callback(error);
         }
 
         try {
           // Verify session.cookie.expires is not a boolean
           // If so, use current time along with ttl else
           // cast session.cookie.expires to Date to avoid TS error
-          const isExpireBoolean =
-            !!session.cookie && typeof session.cookie.expires === 'boolean';
+          const isExpireBoolean = !!session.cookie && typeof session.cookie.expires === 'boolean';
           const expires = new Date(
             isExpireBoolean || !(session.cookie && session.cookie.expires)
               ? Date.now() + this.ttl
-              : (session.cookie.expires as Date)
+              : (session.cookie.expires as Date),
           );
           const request = (this.databaseConnection as ConnectionPool).request();
           await request
@@ -275,23 +275,24 @@ const Store = (
               WHERE sid = @sid`);
 
           return callback();
-        } catch (error) {
-          this.errorHandler('touch', error, callback);
+        } catch (err) {
+          return this.errorHandler('touch', err, callback);
         }
       });
     }
-    //////////////////////////////////////////////////////////////////
+
+    // ////////////////////////////////////////////////////////////////
     // Destroy the session associated with the given sid
     /**
      *
      * @param sid
      * @param callback
      */
-    ////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////
     destroy(sid: string, callback: CommonCallback) {
       this.ready(async (error: Errors) => {
         if (error) {
-          throw error;
+          return callback(error);
         }
 
         try {
@@ -301,18 +302,19 @@ const Store = (
               WHERE sid = @sid`);
 
           return callback();
-        } catch (error) {
-          this.errorHandler('destroy', error, callback);
+        } catch (err) {
+          return this.errorHandler('destroy', err, callback);
         }
       });
     }
-    //////////////////////////////////////////////////////////////////
+
+    // ////////////////////////////////////////////////////////////////
     // Destroy expired sessions
-    ////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////
     destroyExpired(callback: CommonCallback) {
       this.ready(async (error: Errors) => {
         if (error) {
-          throw error;
+          return callback(error);
         }
 
         try {
@@ -325,24 +327,25 @@ const Store = (
             this.autoRemoveCallback();
           }
           return callback();
-        } catch (error) {
+        } catch (err) {
           if (this.autoRemoveCallback) {
-            this.autoRemoveCallback(error);
+            this.autoRemoveCallback(err);
           }
-          this.errorHandler('destroyExpired', error, callback);
+          return this.errorHandler('destroyExpired', err, callback);
         }
       });
     }
-    //////////////////////////////////////////////////////////////////
+
+    // ////////////////////////////////////////////////////////////////
     // Fetch number of sessions
     /**
      * @param callback
      */
-    ////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////
     length(callback: LengthCallback) {
       this.ready(async (error: Errors) => {
         if (error) {
-          throw error;
+          return callback(error);
         }
 
         try {
@@ -352,21 +355,22 @@ const Store = (
               FROM ${this.table}`);
 
           return callback(null, result.recordset[0].length);
-        } catch (error) {
-          this.errorHandler('length', error, callback);
+        } catch (err) {
+          return this.errorHandler('length', err, callback);
         }
       });
     }
-    //////////////////////////////////////////////////////////////////
+
+    // ////////////////////////////////////////////////////////////////
     // Clear all sessions
     /**
      * @param callback
      */
-    ////////////////////////////////////////////////////////////////
+    // //////////////////////////////////////////////////////////////
     clear(callback: CommonCallback) {
       this.ready(async (error: Errors) => {
         if (error) {
-          throw error;
+          return callback(error);
         }
 
         try {
@@ -375,8 +379,8 @@ const Store = (
               TRUNCATE TABLE ${this.table}`);
 
           return callback();
-        } catch (error) {
-          this.errorHandler('clear', error, callback);
+        } catch (err) {
+          return this.errorHandler('clear', err, callback);
         }
       });
     }

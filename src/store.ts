@@ -155,14 +155,15 @@ const Store = (
       error: StoreError,
       callback?: CommonCallback | GetCallback | LengthCallback | ReadyCallback,
     ) {
-      if (callback) {
-        callback(error);
-      }
       // Attachs sessionError event listener and emits on error on any
       // store error and includes method where error occured
       // eslint-disable-next-line no-shadow
       this.databaseConnection.on('sessionError', (error, method) => this.emit('sessionError', error, method));
-      return this.databaseConnection.emit('sessionError', error, method);
+      this.databaseConnection.emit('sessionError', error, method);
+      if (callback) {
+        return callback(error);
+      }
+      return undefined;
     }
 
     // ////////////////////////////////////////////////////////////////

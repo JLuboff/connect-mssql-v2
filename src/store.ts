@@ -38,14 +38,14 @@ export interface StoreOptions {
    */
   useUTC?: boolean;
 }
-export type Errors = ConnectionError | Error | null;
+export type StoreError = ConnectionError | Error | null;
 export type GetCallback = (
-  error: Errors,
+  error: StoreError,
   session?: Express.SessionData | null
 ) => void;
-export type LengthCallback = (error: Errors, length?: number) => void;
-export type CommonCallback = (args?: any[] | null | Errors) => void;
-export type ReadyCallback = (error: Errors, cb?: any) => Promise<any>;
+export type LengthCallback = (error: StoreError, length?: number) => void;
+export type CommonCallback = (args?: any[] | null | StoreError) => void;
+export type ReadyCallback = (error: StoreError, cb?: any) => Promise<any>;
 
 export interface IMSSQLStore {
   config: SQLConfig;
@@ -112,8 +112,11 @@ const Store = (
 
     private async initializeDatabase() {
       try {
+        // Attachs connect event listener and emits on successful connection
         this.databaseConnection.on('connect', () => this.emit('connect', this));
+        // Attachs error event listener and emits on failed connection
         this.databaseConnection.on('error', (error) => this.emit('error', error));
+
         await this.databaseConnection.connect();
         this.databaseConnection.emit('connect');
         if (this.autoRemove) {
@@ -140,9 +143,27 @@ const Store = (
         }
         throw new Error('Connection is closed.');
       } catch (error) {
-        this.databaseConnection!.emit('error', error);
-        return callback.call(this, error);
+        if (callback) {
+          callback.call(this, error);
+        }
+        return this.databaseConnection!.emit('error', error);
       }
+    }
+
+    errorHandler(
+      method: keyof IMSSQLStore,
+      error: StoreError,
+      callback?: CommonCallback | GetCallback | LengthCallback | ReadyCallback,
+    ) {
+      // Attachs sessionError event listener and emits on error on any
+      // store error and includes method where error occured
+      // eslint-disable-next-line no-shadow
+      this.databaseConnection.on('sessionError', (error, method) => this.emit('sessionError', error, method));
+      this.databaseConnection.emit('sessionError', error, method);
+      if (callback) {
+        return callback(error);
+      }
+      return undefined;
     }
 
     // ////////////////////////////////////////////////////////////////
@@ -153,7 +174,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     get(sid: string, callback: GetCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -169,7 +190,7 @@ const Store = (
 
           return callback(null, null);
         } catch (err) {
-          return callback(err);
+          return this.errorHandler('get', err, callback);
         }
       });
     }
@@ -185,7 +206,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     set(sid: string, session: Express.SessionData, callback: CommonCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -216,7 +237,7 @@ const Store = (
 
           return callback();
         } catch (err) {
-          return callback(err);
+          return this.errorHandler('set', err, callback);
         }
       });
     }
@@ -231,7 +252,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     touch(sid: string, session: Express.SessionData, callback: CommonCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -256,7 +277,7 @@ const Store = (
 
           return callback();
         } catch (err) {
-          return callback(err);
+          return this.errorHandler('touch', err, callback);
         }
       });
     }
@@ -270,7 +291,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     destroy(sid: string, callback: CommonCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -283,7 +304,7 @@ const Store = (
 
           return callback();
         } catch (err) {
-          return callback(err);
+          return this.errorHandler('destroy', err, callback);
         }
       });
     }
@@ -292,7 +313,7 @@ const Store = (
     // Destroy expired sessions
     // //////////////////////////////////////////////////////////////
     destroyExpired(callback: CommonCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -311,7 +332,7 @@ const Store = (
           if (this.autoRemoveCallback) {
             this.autoRemoveCallback(err);
           }
-          return callback(err);
+          return this.errorHandler('destroyExpired', err, callback);
         }
       });
     }
@@ -323,7 +344,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     length(callback: LengthCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -336,7 +357,7 @@ const Store = (
 
           return callback(null, result.recordset[0].length);
         } catch (err) {
-          return callback(error);
+          return this.errorHandler('length', err, callback);
         }
       });
     }
@@ -348,7 +369,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     clear(callback: CommonCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -360,7 +381,7 @@ const Store = (
 
           return callback();
         } catch (err) {
-          return callback(err);
+          return this.errorHandler('clear', err, callback);
         }
       });
     }

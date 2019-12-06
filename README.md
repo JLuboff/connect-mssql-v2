@@ -57,14 +57,18 @@ app.use(
 ```javascript
 const store = new MSSQLStore(config, options);
 
-store.on('connect', function() {
+store.on('connect', () => {
 	// ... connection established
 });
 
-store.on('error', function() {
+store.on('error', (error) => {
 	// ... connection error
 });
 
+store.on('sessionError', (error, classMethod) => {
+  // ... any error that occurs within a store method
+  // classMethod will return the method name (get, set, length, etc)
+})
 app.use(session({
     store: store
     secret: 'supersecret'

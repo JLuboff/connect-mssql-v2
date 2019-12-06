@@ -226,6 +226,26 @@ describe('connect-mssql-v2', () => {
 
         expect(errorHandler).toBeTruthy();
       });
+
+      test('Should emit sessionError (errorHandler called directly, NO CB)', (done) => {
+        const store = new MSSQLStore(sqlConfig, {
+          table: 'Sessions',
+        });
+
+        store.on('sessionError', (error: any, method: string) => {
+          expect(method).toEqual('test');
+          expect(error).toBeInstanceOf(Error);
+
+          done();
+        });
+
+        const errorHandler = store.errorHandler(
+          'test',
+          new Error('Test errorHandler'),
+        );
+
+        expect(errorHandler).toBeFalsy();
+      });
     });
 
     test('Should emit an error listener', (done) => {

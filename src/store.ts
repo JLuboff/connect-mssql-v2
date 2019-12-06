@@ -38,14 +38,14 @@ export interface StoreOptions {
    */
   useUTC?: boolean;
 }
-export type Errors = ConnectionError | Error | null;
+export type StoreError = ConnectionError | Error | null;
 export type GetCallback = (
-  error: Errors,
+  error: StoreError,
   session?: Express.SessionData | null
 ) => void;
-export type LengthCallback = (error: Errors, length?: number) => void;
-export type CommonCallback = (args?: any[] | null | Errors) => void;
-export type ReadyCallback = (error: Errors, cb?: any) => Promise<any>;
+export type LengthCallback = (error: StoreError, length?: number) => void;
+export type CommonCallback = (args?: any[] | null | StoreError) => void;
+export type ReadyCallback = (error: StoreError, cb?: any) => Promise<any>;
 
 export interface IMSSQLStore {
   config: SQLConfig;
@@ -151,8 +151,8 @@ const Store = (
     }
 
     errorHandler(
-      method: string,
-      error: Errors,
+      method: keyof IMSSQLStore,
+      error: StoreError,
       callback?: CommonCallback | GetCallback | LengthCallback | ReadyCallback,
     ) {
       if (callback) {
@@ -173,7 +173,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     get(sid: string, callback: GetCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -205,7 +205,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     set(sid: string, session: Express.SessionData, callback: CommonCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -251,7 +251,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     touch(sid: string, session: Express.SessionData, callback: CommonCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -290,7 +290,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     destroy(sid: string, callback: CommonCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -312,7 +312,7 @@ const Store = (
     // Destroy expired sessions
     // //////////////////////////////////////////////////////////////
     destroyExpired(callback: CommonCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -343,7 +343,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     length(callback: LengthCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }
@@ -368,7 +368,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     clear(callback: CommonCallback) {
-      this.ready(async (error: Errors) => {
+      this.ready(async (error: StoreError) => {
         if (error) {
           return callback(error);
         }

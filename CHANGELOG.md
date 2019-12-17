@@ -2,6 +2,13 @@
 All project updates will be documented in this file
 
 ## [Unreleased]
+- No unreleased features being worked on
+
+## [v1.3.0] - 2019-12-17
+- Changed sessionError event listener from using `on` to `once`
+    - Should no longer attach multiples of the same listener
+- Refactored to use optional chaining
+- Refactored `return callback(error)` to `throw error` 
 
 ## [v1.2.0] - 2019-12-06
 - Added sessionError event listener

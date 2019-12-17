@@ -30,7 +30,7 @@ export interface StoreOptions {
    */
   autoRemoveInterval?: number;
   /**
-   * (NOT CURRENTLY TESTED) Is the callback function for `destroyExpired()`. Default: `undefined`
+   * Is the callback function for `destroyExpired()`. Default: `undefined`
    */
   autoRemoveCallback?: (props: any) => any;
   /**
@@ -100,12 +100,12 @@ const Store = (
 
     constructor(config: SQLConfig, options?: StoreOptions) {
       super();
-      this.table = (options && options.table) || 'sessions';
-      this.ttl = (options && options.ttl) || 1000 * 60 * 60 * 24;
-      this.autoRemove = (options && options.autoRemove) || false;
-      this.autoRemoveInterval = (options && options.autoRemoveInterval) || 1000 * 60 * 10;
-      this.autoRemoveCallback = (options && options.autoRemoveCallback) || undefined;
-      this.useUTC = (options && options.useUTC) || true;
+      this.table = options?.table || 'sessions';
+      this.ttl = options?.ttl || 1000 * 60 * 60 * 24;
+      this.autoRemove = options?.autoRemove || false;
+      this.autoRemoveInterval = options?.autoRemoveInterval || 1000 * 60 * 10;
+      this.autoRemoveCallback = options?.autoRemoveCallback || undefined;
+      this.useUTC = options?.useUTC || true;
       this.config = config;
       this.databaseConnection = new sql.ConnectionPool(config);
     }
@@ -135,10 +135,10 @@ const Store = (
         ) {
           await this.initializeDatabase();
         }
-        if (this.databaseConnection && this.databaseConnection.connected) {
+        if (this.databaseConnection?.connected) {
           return callback.call(this, null, null);
         }
-        if (this.databaseConnection && this.databaseConnection.connecting) {
+        if (this.databaseConnection?.connecting) {
           return this.databaseConnection.once('connect', callback.bind(this));
         }
         throw new Error('Connection is closed.');
@@ -158,7 +158,7 @@ const Store = (
       // Attachs sessionError event listener and emits on error on any
       // store error and includes method where error occured
       // eslint-disable-next-line no-shadow
-      this.databaseConnection.on('sessionError', (error, method) => this.emit('sessionError', error, method));
+      this.databaseConnection.once('sessionError', (error, method) => this.emit('sessionError', error, method));
       this.databaseConnection.emit('sessionError', error, method);
       if (callback) {
         return callback(error);
@@ -176,7 +176,7 @@ const Store = (
     get(sid: string, callback: GetCallback) {
       this.ready(async (error: StoreError) => {
         if (error) {
-          return callback(error);
+          throw error;
         }
 
         try {
@@ -208,7 +208,7 @@ const Store = (
     set(sid: string, session: Express.SessionData, callback: CommonCallback) {
       this.ready(async (error: StoreError) => {
         if (error) {
-          return callback(error);
+          throw error;
         }
 
         try {
@@ -217,7 +217,7 @@ const Store = (
           // cast session.cookie.expires to Date to avoid TS error
           const isExpireBoolean = !!session.cookie && typeof session.cookie.expires === 'boolean';
           const expires = new Date(
-            isExpireBoolean || !(session.cookie && session.cookie.expires)
+            isExpireBoolean || !session.cookie?.expires
               ? Date.now() + this.ttl
               : (session.cookie.expires as Date),
           );
@@ -254,7 +254,7 @@ const Store = (
     touch(sid: string, session: Express.SessionData, callback: CommonCallback) {
       this.ready(async (error: StoreError) => {
         if (error) {
-          return callback(error);
+          throw error;
         }
 
         try {
@@ -263,7 +263,7 @@ const Store = (
           // cast session.cookie.expires to Date to avoid TS error
           const isExpireBoolean = !!session.cookie && typeof session.cookie.expires === 'boolean';
           const expires = new Date(
-            isExpireBoolean || !(session.cookie && session.cookie.expires)
+            isExpireBoolean || !session.cookie?.expires
               ? Date.now() + this.ttl
               : (session.cookie.expires as Date),
           );
@@ -293,7 +293,7 @@ const Store = (
     destroy(sid: string, callback: CommonCallback) {
       this.ready(async (error: StoreError) => {
         if (error) {
-          return callback(error);
+          throw error;
         }
 
         try {
@@ -315,7 +315,7 @@ const Store = (
     destroyExpired(callback: CommonCallback) {
       this.ready(async (error: StoreError) => {
         if (error) {
-          return callback(error);
+          throw error;
         }
 
         try {
@@ -346,7 +346,7 @@ const Store = (
     length(callback: LengthCallback) {
       this.ready(async (error: StoreError) => {
         if (error) {
-          return callback(error);
+          throw error;
         }
 
         try {
@@ -371,7 +371,7 @@ const Store = (
     clear(callback: CommonCallback) {
       this.ready(async (error: StoreError) => {
         if (error) {
-          return callback(error);
+          throw error;
         }
 
         try {

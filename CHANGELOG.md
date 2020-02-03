@@ -4,6 +4,11 @@ All project updates will be documented in this file
 ## [Unreleased]
 - No unreleased features being worked on
 
+## [v1.4.0] - 2020-02-03
+- Modified most methods to first check if callback exists before calling it (fix #11)
+- Refactored to remove `.call` and `.bind` in most places
+- Updated all packages
+
 ## [v1.3.0] - 2019-12-17
 - Changed sessionError event listener from using `on` to `once`
     - Should no longer attach multiples of the same listener

@@ -63,7 +63,7 @@ export interface IMSSQLStore {
     callback: CommonCallback
   ): void;
   destroy(sid: string, callback: CommonCallback): void;
-  destroyExpired(callback: CommonCallback): void;
+  destroyExpired(callback: any): void;
   length(callback: LengthCallback): void;
   clear(callback: CommonCallback): void;
 }
@@ -120,7 +120,10 @@ const Store = (
         await this.databaseConnection.connect();
         this.databaseConnection.emit('connect');
         if (this.autoRemove) {
-          setInterval(this.destroyExpired.bind(this), this.autoRemoveInterval);
+          setInterval(
+            () => this.destroyExpired(this.autoRemoveCallback),
+            this.autoRemoveInterval,
+          );
         }
       } catch (error) {
         throw error;
@@ -136,7 +139,7 @@ const Store = (
           await this.initializeDatabase();
         }
         if (this.databaseConnection?.connected) {
-          return callback.call(this, null, null);
+          return callback(null, null);
         }
         if (this.databaseConnection?.connecting) {
           return this.databaseConnection.once('connect', callback.bind(this));
@@ -144,7 +147,7 @@ const Store = (
         throw new Error('Connection is closed.');
       } catch (error) {
         if (callback) {
-          callback.call(this, error);
+          callback(error);
         }
         return this.databaseConnection!.emit('error', error);
       }
@@ -235,7 +238,10 @@ const Store = (
                       VALUES (@sid, @session, @expires)
                   END;`);
 
-          return callback();
+          if (callback) {
+            return callback();
+          }
+          return null;
         } catch (err) {
           return this.errorHandler('set', err, callback);
         }
@@ -275,7 +281,10 @@ const Store = (
                 SET expires = @expires 
               WHERE sid = @sid`);
 
-          return callback();
+          if (callback) {
+            return callback();
+          }
+          return null;
         } catch (err) {
           return this.errorHandler('touch', err, callback);
         }
@@ -302,7 +311,10 @@ const Store = (
               DELETE FROM ${this.table} 
               WHERE sid = @sid`);
 
-          return callback();
+          if (callback) {
+            return callback();
+          }
+          return null;
         } catch (err) {
           return this.errorHandler('destroy', err, callback);
         }
@@ -312,7 +324,7 @@ const Store = (
     // ////////////////////////////////////////////////////////////////
     // Destroy expired sessions
     // //////////////////////////////////////////////////////////////
-    destroyExpired(callback: CommonCallback) {
+    destroyExpired(callback: any) {
       this.ready(async (error: StoreError) => {
         if (error) {
           throw error;
@@ -327,7 +339,10 @@ const Store = (
           if (this.autoRemoveCallback) {
             this.autoRemoveCallback();
           }
-          return callback();
+          if (callback) {
+            return callback();
+          }
+          return null;
         } catch (err) {
           if (this.autoRemoveCallback) {
             this.autoRemoveCallback(err);
@@ -379,7 +394,10 @@ const Store = (
           await request.query(`
               TRUNCATE TABLE ${this.table}`);
 
-          return callback();
+          if (callback) {
+            return callback();
+          }
+          return null;
         } catch (err) {
           return this.errorHandler('clear', err, callback);
         }

@@ -5,7 +5,6 @@ import sql, {
   MAX,
   DateTime,
   ConnectionPool,
-  ConnectionError,
 } from 'mssql';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Store as ExpressSessionStore } from 'express-session';
@@ -38,34 +37,31 @@ export interface StoreOptions {
    */
   useUTC?: boolean;
 }
-export type StoreError = ConnectionError | Error | null;
-export type GetCallback = (
-  error: StoreError,
-  session?: Express.SessionData | null
-) => void;
-export type LengthCallback = (error: StoreError, length?: number) => void;
-export type CommonCallback = (args?: any[] | null | StoreError) => void;
-export type ReadyCallback = (error: StoreError, cb?: any) => Promise<any>;
+
+export type ReadyCallback = (err?: any, callback?: any) => Promise<any>;
 
 export interface IMSSQLStore {
   config: SQLConfig;
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
-  get(sid: string, callback: GetCallback): void;
+  get(
+    sid: string,
+    callback: (err: any, session?: Express.SessionData | null) => void
+  ): void;
   set(
     sid: string,
     session: Express.SessionData,
-    callback: CommonCallback
+    callback?: (err?: any) => void
   ): void;
   touch(
     sid: string,
     session: Express.SessionData,
-    callback: CommonCallback
+    callback?: (err?: any) => void
   ): void;
-  destroy(sid: string, callback: CommonCallback): void;
-  destroyExpired(callback: any): void;
-  length(callback: LengthCallback): void;
-  clear(callback: CommonCallback): void;
+  destroy(sid: string, callback?: (err?: any) => void): void;
+  destroyExpired(callback?: Function): void;
+  length(callback?: (err: any, length?: number | null) => void): void;
+  clear(callback?: (err?: any) => void): void;
 }
 type TypeofExpressSessionStoreObject = { Store: TypeofExpressSessionStore };
 type TypeofExpressSessionStore = typeof ExpressSessionStore;
@@ -130,7 +126,7 @@ const Store = (
       }
     }
 
-    private async ready(callback: ReadyCallback) {
+    private async ready(callback: (err?: any, callback?: any) => Promise<any>) {
       try {
         if (
           !this.databaseConnection.connected
@@ -153,11 +149,7 @@ const Store = (
       }
     }
 
-    errorHandler(
-      method: keyof IMSSQLStore,
-      error: StoreError,
-      callback?: CommonCallback | GetCallback | LengthCallback | ReadyCallback,
-    ) {
+    errorHandler(method: keyof IMSSQLStore, error: any, callback?: any) {
       // Attachs sessionError event listener and emits on error on any
       // store error and includes method where error occured
       // eslint-disable-next-line no-shadow
@@ -176,8 +168,11 @@ const Store = (
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    get(sid: string, callback: GetCallback) {
-      this.ready(async (error: StoreError) => {
+    get(
+      sid: string,
+      callback: (err: any, session?: Express.SessionData | null) => void,
+    ) {
+      this.ready(async (error: any) => {
         if (error) {
           throw error;
         }
@@ -208,8 +203,12 @@ const Store = (
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    set(sid: string, session: Express.SessionData, callback: CommonCallback) {
-      this.ready(async (error: StoreError) => {
+    set(
+      sid: string,
+      session: Express.SessionData,
+      callback?: (err?: any) => void,
+    ) {
+      this.ready(async (error: any) => {
         if (error) {
           throw error;
         }
@@ -257,8 +256,12 @@ const Store = (
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    touch(sid: string, session: Express.SessionData, callback: CommonCallback) {
-      this.ready(async (error: StoreError) => {
+    touch(
+      sid: string,
+      session: Express.SessionData,
+      callback: (err?: any) => void,
+    ) {
+      this.ready(async (error: any) => {
         if (error) {
           throw error;
         }
@@ -299,8 +302,8 @@ const Store = (
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    destroy(sid: string, callback: CommonCallback) {
-      this.ready(async (error: StoreError) => {
+    destroy(sid: string, callback: (err?: any) => void) {
+      this.ready(async (error: any) => {
         if (error) {
           throw error;
         }
@@ -325,7 +328,7 @@ const Store = (
     // Destroy expired sessions
     // //////////////////////////////////////////////////////////////
     destroyExpired(callback: any) {
-      this.ready(async (error: StoreError) => {
+      this.ready(async (error: any) => {
         if (error) {
           throw error;
         }
@@ -358,8 +361,8 @@ const Store = (
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    length(callback: LengthCallback) {
-      this.ready(async (error: StoreError) => {
+    length(callback: (err: any, length?: number | null) => void) {
+      this.ready(async (error: any) => {
         if (error) {
           throw error;
         }
@@ -383,8 +386,8 @@ const Store = (
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    clear(callback: CommonCallback) {
-      this.ready(async (error: StoreError) => {
+    clear(callback: (err?: any) => void) {
+      this.ready(async (error: any) => {
         if (error) {
           throw error;
         }

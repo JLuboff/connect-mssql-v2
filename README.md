@@ -2,6 +2,9 @@
 
 SQL Server session store for Connect/Express based on [![Github Stars][mssql-image] node-mssql][mssql-url] and the deprecated/abandon project [![Github Stars][connect-mssql-image] connect-mssql][connect-mssql-url].
 
+## Warning 
+Typings will be changed in future versions due to awaiting `express-session` updated typings. Currently they may not be fully accurate.
+
 ## Installation
 
     npm install connect-mssql-v2
@@ -78,6 +81,9 @@ app.use(session({
 ## Configuration
 
 To see all options please visit [node-mssql docs](https://github.com/patriksimek/node-mssql#cfg-basic).
+
+## Contributions
+Contributions are welcome, please submit a PR which will be reviewed.
 
 ## License
 

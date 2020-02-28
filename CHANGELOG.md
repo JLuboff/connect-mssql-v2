@@ -2,7 +2,15 @@
 All project updates will be documented in this file
 
 ## [Unreleased]
-- No unreleased features being worked on
+- Updated typings
+    - Currently awaiting updated `express-session` typings to update (I believe this will not be until v2 of `express-session` comes out)
+    - This will most likely have breaking changes (and thus be v2.0.0)
+
+## [v1.4.1] - 2020-02-28
+- Removed the following types: GetCallback, CommonCallback, LengthCallback, and StoreError. 
+    - Replaced with generic in place typings (i.e `(err?: any) => void`)
+- Updated README to include note on typings and contributors
+- Updated all packages
 
 ## [v1.4.0] - 2020-02-03
 - Modified most methods to first check if callback exists before calling it (fix #11)

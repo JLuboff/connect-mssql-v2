@@ -25,8 +25,8 @@
     "url": "https://github.com/JLuboff/connect-mssql-v2/issues"
   },
   "homepage": "https://github.com/JLuboff/connect-mssql-v2#readme",
-  "peerDependencies": {
-    "mssql": "^6.1.0"
+  "dependencies": {
+    "mssql": "^6.2.1"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",

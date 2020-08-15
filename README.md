@@ -1,3 +1,5 @@
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/JLuboff/connect-mssql-v2)
+
 # connect-mssql-v2
 
 SQL Server session store for Connect/Express based on [![Github Stars][mssql-image] node-mssql][mssql-url] and the deprecated/abandon project [![Github Stars][connect-mssql-image] connect-mssql][connect-mssql-url].

@@ -7,7 +7,7 @@
   "scripts": {
     "prepublishOnly": "rmdir /S /Q dist && tsc",
     "test": "jest --watch ./dist/test",
-    "lint": "npx eslint src"
+    "lint": "npx eslint src --ext .ts"
   },
   "repository": {
     "type": "git",

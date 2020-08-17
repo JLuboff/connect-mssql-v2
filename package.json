@@ -6,7 +6,8 @@
   "types": "dist/src/store.d.ts",
   "scripts": {
     "prepublishOnly": "rmdir /S /Q dist && tsc",
-    "test": "jest --watch ./dist/test"
+    "test": "jest --watch ./dist/test",
+    "lint": "npx eslint src"
   },
   "repository": {
     "type": "git",
@@ -39,11 +40,24 @@
     "eslint-config-airbnb-typescript": "^7.0.0",
     "eslint-plugin-import": "^2.20.1",
     "express-session": "^1.17.0",
+    "husky": "^4.2.5",
     "jest": "^25.1.0",
+    "lint-staged": "^10.2.11",
+    "prettier": "^2.0.5",
     "typescript": "^3.8.2"
   },
   "files": [
     "dist/src/store.js",
     "dist/src/store.d.ts"
-  ]
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged --quiet"
+    }
+  },
+  "lint-staged": {
+    ".{ts}": [
+      "prettier --write"
+    ]
+  }
 }

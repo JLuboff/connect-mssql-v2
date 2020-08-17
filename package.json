@@ -6,7 +6,8 @@
   "types": "dist/src/store.d.ts",
   "scripts": {
     "prepublishOnly": "rmdir /S /Q dist && tsc",
-    "test": "jest --watch ./dist/test"
+    "test": "jest --watch ./dist/test",
+    "lint": "npx eslint src"
   },
   "repository": {
     "type": "git",
@@ -41,10 +42,23 @@
     "eslint-plugin-import": "^2.22.0",
     "express-session": "^1.17.1",
     "jest": "^26.4.0",
-    "typescript": "^3.9.7"
+    "typescript": "^3.9.7",
+    "husky": "^4.2.5",
+    "lint-staged": "^10.2.11",
+    "prettier": "^2.0.5",
   },
   "files": [
     "dist/src/store.js",
     "dist/src/store.d.ts"
-  ]
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged --quiet"
+    }
+  },
+  "lint-staged": {
+    ".{ts}": [
+      "prettier --write"
+    ]
+  }
 }

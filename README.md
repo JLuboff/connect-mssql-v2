@@ -1,3 +1,10 @@
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/JLuboff/connect-mssql-v2)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![npm](https://img.shields.io/npm/v/connect-mssql-v2)
+![npm](https://img.shields.io/npm/dw/connect-mssql-v2)
+![GitHub issues](https://img.shields.io/github/issues-raw/jluboff/connect-mssql-v2)
+![GitHub issues](https://img.shields.io/github/issues-pr-raw/jluboff/connect-mssql-v2)
+
 # connect-mssql-v2
 
 SQL Server session store for Connect/Express based on [![Github Stars][mssql-image] node-mssql][mssql-url] and the deprecated/abandon project [![Github Stars][connect-mssql-image] connect-mssql][connect-mssql-url].

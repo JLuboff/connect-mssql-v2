@@ -6,6 +6,19 @@ All project updates will be documented in this file
     - Currently awaiting updated `express-session` typings to update (I believe this will not be until v2 of `express-session` comes out)
     - This will most likely have breaking changes (and thus be v2.0.0)
 
+## [v1.5.0] - 2020-08-18
+- Updated README
+    - Added various badges
+    - Added typescript example
+    - Added Reporting Issues section
+    - Removed MIT license text in favor of link to license file
+- Updated package.json
+    - @bradtaniguchi added lint script, along with husky/prettier pre-commit hooks
+    - Moved `@types/mssql` to devDependencies
+    - Updated all packages to latest at time of writing
+- Updated ESLint config to include `parserOptions`
+- Work started on creating Gitpod environment for dev
+
 ## [v1.4.1] - 2020-02-28
 - Removed the following types: GetCallback, CommonCallback, LengthCallback, and StoreError. 
     - Replaced with generic in place typings (i.e `(err?: any) => void`)

@@ -44,6 +44,9 @@ export interface IMSSQLStore {
   config: SQLConfig;
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
+  all(
+    callback: (err: any, session?: Express.SessionData | null) => void
+  ): void;
   get(
     sid: string,
     callback: (err: any, session?: Express.SessionData | null) => void
@@ -187,7 +190,7 @@ const Store = (
 
           return callback(null, null);
         } catch (err) {
-          return this.errorHandler('get', err, callback);
+          return this.errorHandler('all', err, callback);
         }
       });
     }

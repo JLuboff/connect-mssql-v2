@@ -44,6 +44,9 @@ export interface IMSSQLStore {
   config: SQLConfig;
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
+  all(
+    callback: (err: any, session?: Express.SessionData | null) => void
+  ): void;
   get(
     sid: string,
     callback: (err: any, session?: Express.SessionData | null) => void
@@ -159,6 +162,37 @@ const Store = (
         return callback(error);
       }
       return undefined;
+    }
+
+    // ////////////////////////////////////////////////////////////////
+    // Attempt to fetch all sessions
+    /**
+     * @param sid
+     * @param callback
+     */
+    // //////////////////////////////////////////////////////////////
+    all(
+      callback: (err: any, session?: Express.SessionData | null) => void,
+    ) {
+      this.ready(async (error: any) => {
+        if (error) {
+          throw error;
+        }
+
+        try {
+          const request = (this.databaseConnection as ConnectionPool).request();
+          const result = await request.query(`
+              SELECT session FROM ${this.table}`);
+
+          if (result.recordset.length) {
+            return callback(null, JSON.parse(result.recordset[0].session));
+          }
+
+          return callback(null, null);
+        } catch (err) {
+          return this.errorHandler('all', err, callback);
+        }
+      });
     }
 
     // ////////////////////////////////////////////////////////////////

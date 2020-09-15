@@ -93,6 +93,19 @@ describe('connect-mssql-v2', () => {
         return done();
       });
     });
+    test('Should get all existing sessions', async (done) => {
+      await store.set('5678DEF', TESTDATA, done);
+
+      store.all((err: any, session: any) => {
+        if (err) return done(err);
+
+        expect(session).toHaveLength(2);
+        expect(JSON.parse(session[1].session).somevalue).toBe('yes');
+
+        store.destroy('5678DEF');
+        return done();
+      });
+    });
     test('Should remove created session', (done) => {
       store.destroy('1234ABC', done);
     });

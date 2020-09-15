@@ -6,6 +6,21 @@ All project updates will be documented in this file
     - Currently awaiting updated `express-session` typings to update (I believe this will not be until v2 of `express-session` comes out)
     - This will most likely have breaking changes (and thus be v2.0.0)
 
+## [v1.6.0] - 2020-09-15
+- Merged PR #27 submitted by @master117 (Thanks for the contribution!)
+    - Added support for `all` method which pulls all sessions from the table
+- Fixed typings for `all` method to indicate it returns an array
+- Added test for `all` method
+- Updated packages
+    - @types/mssql
+    - @types/jest
+    - jest
+    - typescript
+    - husky
+    - eslint
+    - lint-staged
+    - prettier
+
 ## [v1.5.0] - 2020-08-18
 - Updated README
     - Added various badges

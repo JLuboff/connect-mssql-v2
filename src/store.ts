@@ -45,7 +45,7 @@ export interface IMSSQLStore {
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
   all(
-    callback: (err: any, session?: Express.SessionData | null) => void
+    callback: (err: any, session?: Express.SessionData[] | null) => void
   ): void;
   get(
     sid: string,
@@ -172,7 +172,7 @@ const Store = (
      */
     // //////////////////////////////////////////////////////////////
     all(
-      callback: (err: any, session?: Express.SessionData | null) => void,
+      callback: (err: any, session?: Express.SessionData[] | null) => void,
     ) {
       this.ready(async (error: any) => {
         if (error) {
@@ -185,7 +185,7 @@ const Store = (
               SELECT session FROM ${this.table}`);
 
           if (result.recordset.length) {
-            return callback(null, JSON.parse(result.recordset[0].session));
+            return callback(null, result.recordset);
           }
 
           return callback(null, null);

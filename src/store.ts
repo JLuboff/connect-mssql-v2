@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 /* eslint-disable no-useless-catch */
 import sql, {
   config as SQLConfig,
@@ -45,7 +46,7 @@ export interface IMSSQLStore {
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
   all(
-    callback: (err: any, session?: Express.SessionData[] | null) => void
+    callback: (err: any, session?: { [sid: string]: Express.SessionData } | null) => void
   ): void;
   get(
     sid: string,
@@ -167,12 +168,11 @@ const Store = (
     // ////////////////////////////////////////////////////////////////
     // Attempt to fetch all sessions
     /**
-     * @param sid
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
     all(
-      callback: (err: any, session?: Express.SessionData[] | null) => void,
+      callback: (err: any, session?: { [sid: string]: Express.SessionData; } | null) => void,
     ) {
       this.ready(async (error: any) => {
         if (error) {
@@ -181,11 +181,16 @@ const Store = (
 
         try {
           const request = (this.databaseConnection as ConnectionPool).request();
-          const result = await request.query(`
-              SELECT session FROM ${this.table}`);
+          const result: { recordset: { sid: string, session: any }[] } = await request.query(`
+              SELECT sid, session FROM ${this.table}`);
 
           if (result.recordset.length) {
-            return callback(null, result.recordset);
+            const returnObject: { [sid: string]: Express.SessionData; } = {};
+            for (let i = 0; i < result.recordset.length; i += 1) {
+              returnObject[result.recordset[i].sid] = result.recordset[i].session;
+            }
+
+            return callback(null, returnObject);
           }
 
           return callback(null, null);

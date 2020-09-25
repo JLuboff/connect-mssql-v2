@@ -187,7 +187,7 @@ const Store = (
           if (result.recordset.length) {
             const returnObject: { [sid: string]: Express.SessionData; } = {};
             for (let i = 0; i < result.recordset.length; i += 1) {
-              returnObject[result.recordset[i].sid] = result.recordset[i].session;
+              returnObject[result.recordset[i].sid] = JSON.parse(result.recordset[i].session);
             }
 
             return callback(null, returnObject);

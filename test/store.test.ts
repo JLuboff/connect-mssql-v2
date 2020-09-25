@@ -99,8 +99,8 @@ describe('connect-mssql-v2', () => {
       store.all((err: any, session: any) => {
         if (err) return done(err);
 
-        expect(session).toHaveLength(2);
-        expect(JSON.parse(session[1].session).somevalue).toBe('yes');
+        expect(Object.keys(session)).toHaveLength(2);
+        expect(session['5678DEF'].somevalue).toBe('yes');
 
         store.destroy('5678DEF');
         return done();

@@ -6,6 +6,20 @@ All project updates will be documented in this file
     - Currently awaiting updated `express-session` typings to update (I believe this will not be until v2 of `express-session` comes out)
     - This will most likely have breaking changes (and thus be v2.0.0)
 
+## [v1.6.1] - 2020-09-28
+- Merged PR #28 submitted by @master117
+    - Changed result set from `all` method
+- Updated packages
+    - @types/jest
+    - @typescript-eslint/eslint-plugin
+    - @typescript-eslint/parser
+    - eslint
+    - eslint-plugin-import
+    - lint-staged
+    - mssql
+    - prettier
+    - typescript
+
 ## [v1.6.0] - 2020-09-15
 - Merged PR #27 submitted by @master117 (Thanks for the contribution!)
     - Added support for `all` method which pulls all sessions from the table

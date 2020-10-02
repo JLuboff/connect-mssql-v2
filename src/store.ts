@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable linebreak-style */
 /* eslint-disable no-useless-catch */
 import sql, {
@@ -157,7 +158,7 @@ const Store = (
       // Attachs sessionError event listener and emits on error on any
       // store error and includes method where error occured
       // eslint-disable-next-line no-shadow
-      this.databaseConnection.once('sessionError', (error, method) => this.emit('sessionError', error, method));
+      this.databaseConnection.once('sessionError', () => this.emit('sessionError', error, method));
       this.databaseConnection.emit('sessionError', error, method);
       if (callback) {
         return callback(error);

@@ -6,6 +6,16 @@ All project updates will be documented in this file
     - Currently awaiting updated `express-session` typings to update (I believe this will not be until v2 of `express-session` comes out)
     - This will most likely have breaking changes (and thus be v2.0.0)
 
+## [v1.6.2] - 2020-10-02
+- Merged PR #30
+    - Updated packages to current version
+        - @types/mssql
+        - @typescript-eslint/eslint-plugin
+        - @typescript-eslint/parser
+        - eslint-config-airbnb-typescript
+    - Disabled eslint rule no-undef
+    - Removed arguments from errorHandler this.databaseConnection.once
+
 ## [v1.6.1] - 2020-09-28
 - Merged PR #28 submitted by @master117
     - Changed result set from `all` method

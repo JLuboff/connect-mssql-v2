@@ -32,8 +32,10 @@ CREATE TABLE [dbo].[sessions](
 Javascript
 ```javascript
 const session = require('express-session');
-const MSSQLStore = require('connect-mssql-v2')(session);
-
+/**
+ * We need to access the default export from connect-mssql-v2 module and pass in session
+ */
+const MSSQLStore = require('connect-mssql-v2').default(session);
 const config = {
   user: '...',
   password: '...',

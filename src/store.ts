@@ -11,78 +11,18 @@ import sql, {
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Store as ExpressSessionStore } from 'express-session';
 
-export interface StoreOptions {
-  /**
-   * Table to use as session store. Default: `[sessions]`
-   */
-  table?: string;
-  /**
-   * (Time To Live) Determines the expiration date. Default: `1000 * 60 * 60 * 24` (24 hours)
-   */
-  ttl?: number;
-  /**
-   * Determines if expired sessions should be autoremoved or not.
-   * If value is `true` then a new function, `destroyExpired()`,
-   * will autodelete expired sessions on a set interval. Default: `false`
-   */
-  autoRemove?: boolean;
-  /**
-   * Sets the timer interval for each call to `destroyExpired()`. Default: `1000 * 60 * 10` (10 min)
-   */
-  autoRemoveInterval?: number;
-  /**
-   * Is the callback function for `destroyExpired()`. Default: `undefined`
-   */
-  autoRemoveCallback?: (props: any) => any;
-  /**
-   * Determines if we are to use the `GETUTCDATE` instead of `GETDATE` Default: `true`
-   */
-  useUTC?: boolean;
-}
-
-export type ReadyCallback = (err?: any, callback?: any) => Promise<any>;
-
-export interface IMSSQLStore {
-  config: SQLConfig;
-  options?: StoreOptions;
-  databaseConnection: ConnectionPool | null;
-  all(
-    callback: (err: any, session?: { [sid: string]: Express.SessionData } | null) => void
-  ): void;
-  get(
-    sid: string,
-    callback: (err: any, session?: Express.SessionData | null) => void
-  ): void;
-  set(
-    sid: string,
-    session: Express.SessionData,
-    callback?: (err?: any) => void
-  ): void;
-  touch(
-    sid: string,
-    session: Express.SessionData,
-    callback?: (err?: any) => void
-  ): void;
-  destroy(sid: string, callback?: (err?: any) => void): void;
-  destroyExpired(callback?: Function): void;
-  length(callback?: (err: any, length?: number | null) => void): void;
-  clear(callback?: (err?: any) => void): void;
-}
-type TypeofExpressSessionStoreObject = { Store: TypeofExpressSessionStore };
-type TypeofExpressSessionStore = typeof ExpressSessionStore;
-
-const Store = (
+const ConnectMSSQLV2 = (
   sessionData:
-  | TypeofExpressSessionStoreObject
-  | { session: TypeofExpressSessionStoreObject },
+  | ConnectMSSQLV2.TypeofExpressSessionStoreObject
+  | { session: ConnectMSSQLV2.TypeofExpressSessionStoreObject },
 ): any => {
   // **note** this is cast to any due to multiple issues with the express-session types
   // See https://github.com/JLuboff/connect-mssql-v2/issues/10
 
-  const SessionStore: any = (sessionData as TypeofExpressSessionStoreObject).Store
-    || (sessionData as { session: TypeofExpressSessionStoreObject }).session.Store;
+  const SessionStore: any = (sessionData as ConnectMSSQLV2.TypeofExpressSessionStoreObject).Store
+    || (sessionData as { session: ConnectMSSQLV2.TypeofExpressSessionStoreObject }).session.Store;
 
-  class MSSQLStore extends SessionStore implements IMSSQLStore {
+  class MSSQLStore extends SessionStore implements ConnectMSSQLV2.IMSSQLStore {
     table: string;
 
     ttl: number;
@@ -99,7 +39,7 @@ const Store = (
 
     databaseConnection: ConnectionPool;
 
-    constructor(config: SQLConfig, options?: StoreOptions) {
+    constructor(config: SQLConfig, options?: ConnectMSSQLV2.StoreOptions) {
       super();
       this.table = options?.table || 'sessions';
       this.ttl = options?.ttl || 1000 * 60 * 60 * 24;
@@ -154,7 +94,7 @@ const Store = (
       }
     }
 
-    errorHandler(method: keyof IMSSQLStore, error: any, callback?: any) {
+    errorHandler(method: keyof ConnectMSSQLV2.IMSSQLStore, error: any, callback?: any) {
       // Attachs sessionError event listener and emits on error on any
       // store error and includes method where error occured
       // eslint-disable-next-line no-shadow
@@ -450,4 +390,68 @@ const Store = (
   return MSSQLStore;
 };
 
-export default Store;
+export = ConnectMSSQLV2;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+namespace ConnectMSSQLV2 {
+  export interface StoreOptions {
+    /**
+     * Table to use as session store. Default: `[sessions]`
+     */
+    table?: string;
+    /**
+     * (Time To Live) Determines the expiration date. Default: `1000 * 60 * 60 * 24` (24 hours)
+     */
+    ttl?: number;
+    /**
+     * Determines if expired sessions should be autoremoved or not.
+     * If value is `true` then a new function, `destroyExpired()`,
+     * will autodelete expired sessions on a set interval. Default: `false`
+     */
+    autoRemove?: boolean;
+    /**
+     * Sets the timer interval for each call to `destroyExpired()`.
+     * Default: `1000 * 60 * 10` (10 min)
+     */
+    autoRemoveInterval?: number;
+    /**
+     * Is the callback function for `destroyExpired()`. Default: `undefined`
+     */
+    autoRemoveCallback?: (props: any) => any;
+    /**
+     * Determines if we are to use the `GETUTCDATE` instead of `GETDATE` Default: `true`
+     */
+    useUTC?: boolean;
+  }
+
+  export type ReadyCallback = (err?: any, callback?: any) => Promise<any>;
+
+  export interface IMSSQLStore {
+    config: SQLConfig;
+    options?: StoreOptions;
+    databaseConnection: ConnectionPool | null;
+    all(
+      callback: (err: any, session?: { [sid: string]: Express.SessionData } | null) => void
+    ): void;
+    get(
+      sid: string,
+      callback: (err: any, session?: Express.SessionData | null) => void
+    ): void;
+    set(
+      sid: string,
+      session: Express.SessionData,
+      callback?: (err?: any) => void
+    ): void;
+    touch(
+      sid: string,
+      session: Express.SessionData,
+      callback?: (err?: any) => void
+    ): void;
+    destroy(sid: string, callback?: (err?: any) => void): void;
+    destroyExpired(callback?: Function): void;
+    length(callback?: (err: any, length?: number | null) => void): void;
+    clear(callback?: (err?: any) => void): void;
+  }
+  export type TypeofExpressSessionStoreObject = { Store: TypeofExpressSessionStore };
+  export type TypeofExpressSessionStore = typeof ExpressSessionStore;
+}

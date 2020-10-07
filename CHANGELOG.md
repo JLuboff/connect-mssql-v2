@@ -6,6 +6,10 @@ All project updates will be documented in this file
     - Currently awaiting updated `express-session` typings to update (I believe this will not be until v2 of `express-session` comes out)
     - This will most likely have breaking changes (and thus be v2.0.0)
 
+## [v1.6.3] - 2020-10-07
+- Merged PR #33 submitted by @bradtaniguchi
+    - Fixed an issue where `require('connect-mssql-v2')(session)` was throwing a TypeError (require is not a function)
+
 ## [v1.6.2] - 2020-10-02
 - Merged PR #30
     - Updated packages to current version

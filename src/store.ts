@@ -9,7 +9,7 @@ import sql, {
   ConnectionPool,
 } from 'mssql';
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { Store as ExpressSessionStore } from 'express-session';
+import { Store as ExpressSessionStore, SessionData } from 'express-session';
 
 const ConnectMSSQLV2 = (
   sessionData:
@@ -113,7 +113,7 @@ const ConnectMSSQLV2 = (
      */
     // //////////////////////////////////////////////////////////////
     all(
-      callback: (err: any, session?: { [sid: string]: Express.SessionData; } | null) => void,
+      callback: (err: any, session?: { [sid: string]: SessionData; } | null) => void,
     ) {
       this.ready(async (error: any) => {
         if (error) {
@@ -126,7 +126,7 @@ const ConnectMSSQLV2 = (
               SELECT sid, session FROM ${this.table}`);
 
           if (result.recordset.length) {
-            const returnObject: { [sid: string]: Express.SessionData; } = {};
+            const returnObject: { [sid: string]: SessionData; } = {};
             for (let i = 0; i < result.recordset.length; i += 1) {
               returnObject[result.recordset[i].sid] = JSON.parse(result.recordset[i].session);
             }
@@ -150,7 +150,7 @@ const ConnectMSSQLV2 = (
     // //////////////////////////////////////////////////////////////
     get(
       sid: string,
-      callback: (err: any, session?: Express.SessionData | null) => void,
+      callback: (err: any, session?: SessionData | null) => void,
     ) {
       this.ready(async (error: any) => {
         if (error) {
@@ -185,7 +185,7 @@ const ConnectMSSQLV2 = (
     // //////////////////////////////////////////////////////////////
     set(
       sid: string,
-      session: Express.SessionData,
+      session: SessionData,
       callback?: (err?: any) => void,
     ) {
       this.ready(async (error: any) => {
@@ -238,7 +238,7 @@ const ConnectMSSQLV2 = (
     // //////////////////////////////////////////////////////////////
     touch(
       sid: string,
-      session: Express.SessionData,
+      session: SessionData,
       callback: (err?: any) => void,
     ) {
       this.ready(async (error: any) => {
@@ -431,20 +431,20 @@ namespace ConnectMSSQLV2 {
     options?: StoreOptions;
     databaseConnection: ConnectionPool | null;
     all(
-      callback: (err: any, session?: { [sid: string]: Express.SessionData } | null) => void
+      callback: (err: any, session?: { [sid: string]: SessionData } | null) => void
     ): void;
     get(
       sid: string,
-      callback: (err: any, session?: Express.SessionData | null) => void
+      callback: (err: any, session?: SessionData | null) => void
     ): void;
     set(
       sid: string,
-      session: Express.SessionData,
+      session: SessionData,
       callback?: (err?: any) => void
     ): void;
     touch(
       sid: string,
-      session: Express.SessionData,
+      session: SessionData,
       callback?: (err?: any) => void
     ): void;
     destroy(sid: string, callback?: (err?: any) => void): void;

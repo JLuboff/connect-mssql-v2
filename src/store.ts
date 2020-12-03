@@ -1,28 +1,13 @@
 /* eslint-disable no-undef */
 /* eslint-disable linebreak-style */
 /* eslint-disable no-useless-catch */
-import sql, {
-  config as SQLConfig,
-  NVarChar,
-  MAX,
-  DateTime,
-  ConnectionPool,
-} from 'mssql';
+import sql, { config as SQLConfig, NVarChar, MAX, DateTime, ConnectionPool } from 'mssql';
+
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { Store as ExpressSessionStore, SessionData } from 'express-session';
+import { Store as ExpressSessionStore, SessionData, Store } from 'express-session';
 
-const ConnectMSSQLV2 = (
-  sessionData:
-  | ConnectMSSQLV2.TypeofExpressSessionStoreObject
-  | { session: ConnectMSSQLV2.TypeofExpressSessionStoreObject },
-): any => {
-  // **note** this is cast to any due to multiple issues with the express-session types
-  // See https://github.com/JLuboff/connect-mssql-v2/issues/10
-
-  const SessionStore: any = (sessionData as ConnectMSSQLV2.TypeofExpressSessionStoreObject).Store
-    || (sessionData as { session: ConnectMSSQLV2.TypeofExpressSessionStoreObject }).session.Store;
-
-  class MSSQLStore extends SessionStore implements ConnectMSSQLV2.IMSSQLStore {
+const ConnectMSSQLV2 = (): Store => {
+  class MSSQLStore extends Store implements ConnectMSSQLV2.IMSSQLStore {
     table: string;
 
     ttl: number;
@@ -61,10 +46,7 @@ const ConnectMSSQLV2 = (
         await this.databaseConnection.connect();
         this.databaseConnection.emit('connect');
         if (this.autoRemove) {
-          setInterval(
-            () => this.destroyExpired(this.autoRemoveCallback),
-            this.autoRemoveInterval,
-          );
+          setInterval(() => this.destroyExpired(this.autoRemoveCallback), this.autoRemoveInterval);
         }
       } catch (error) {
         throw error;
@@ -73,10 +55,7 @@ const ConnectMSSQLV2 = (
 
     private async ready(callback: (err?: any, callback?: any) => Promise<any>) {
       try {
-        if (
-          !this.databaseConnection.connected
-          && !this.databaseConnection.connecting
-        ) {
+        if (!this.databaseConnection.connected && !this.databaseConnection.connecting) {
           await this.initializeDatabase();
         }
         if (this.databaseConnection?.connected) {
@@ -112,9 +91,7 @@ const ConnectMSSQLV2 = (
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    all(
-      callback: (err: any, session?: { [sid: string]: SessionData; } | null) => void,
-    ) {
+    all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void) {
       this.ready(async (error: any) => {
         if (error) {
           throw error;
@@ -122,11 +99,13 @@ const ConnectMSSQLV2 = (
 
         try {
           const request = (this.databaseConnection as ConnectionPool).request();
-          const result: { recordset: { sid: string, session: any }[] } = await request.query(`
+          const result: {
+            recordset: { sid: string; session: any }[];
+          } = await request.query(`
               SELECT sid, session FROM ${this.table}`);
 
           if (result.recordset.length) {
-            const returnObject: { [sid: string]: SessionData; } = {};
+            const returnObject: { [sid: string]: SessionData } = {};
             for (let i = 0; i < result.recordset.length; i += 1) {
               returnObject[result.recordset[i].sid] = JSON.parse(result.recordset[i].session);
             }
@@ -148,10 +127,7 @@ const ConnectMSSQLV2 = (
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    get(
-      sid: string,
-      callback: (err: any, session?: SessionData | null) => void,
-    ) {
+    get2(sid: string, callback: (err: any, session?: SessionData | null) => void) {
       this.ready(async (error: any) => {
         if (error) {
           throw error;
@@ -183,11 +159,7 @@ const ConnectMSSQLV2 = (
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    set(
-      sid: string,
-      session: SessionData,
-      callback?: (err?: any) => void,
-    ) {
+    set(sid: string, session: SessionData, callback?: (err?: any) => void) {
       this.ready(async (error: any) => {
         if (error) {
           throw error;
@@ -201,7 +173,7 @@ const ConnectMSSQLV2 = (
           const expires = new Date(
             isExpireBoolean || !session.cookie?.expires
               ? Date.now() + this.ttl
-              : (session.cookie.expires as Date),
+              : (session.cookie.expires as Date)
           );
           const request = (this.databaseConnection as ConnectionPool).request();
           await request
@@ -236,11 +208,7 @@ const ConnectMSSQLV2 = (
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    touch(
-      sid: string,
-      session: SessionData,
-      callback: (err?: any) => void,
-    ) {
+    touch(sid: string, session: SessionData, callback: (err?: any) => void) {
       this.ready(async (error: any) => {
         if (error) {
           throw error;
@@ -254,12 +222,10 @@ const ConnectMSSQLV2 = (
           const expires = new Date(
             isExpireBoolean || !session.cookie?.expires
               ? Date.now() + this.ttl
-              : (session.cookie.expires as Date),
+              : (session.cookie.expires as Date)
           );
           const request = (this.databaseConnection as ConnectionPool).request();
-          await request
-            .input('sid', NVarChar(255), sid)
-            .input('expires', DateTime, expires).query(`
+          await request.input('sid', NVarChar(255), sid).input('expires', DateTime, expires).query(`
               UPDATE ${this.table} 
                 SET expires = @expires 
               WHERE sid = @sid`);
@@ -430,28 +396,17 @@ namespace ConnectMSSQLV2 {
     config: SQLConfig;
     options?: StoreOptions;
     databaseConnection: ConnectionPool | null;
-    all(
-      callback: (err: any, session?: { [sid: string]: SessionData } | null) => void
-    ): void;
-    get(
-      sid: string,
-      callback: (err: any, session?: SessionData | null) => void
-    ): void;
-    set(
-      sid: string,
-      session: SessionData,
-      callback?: (err?: any) => void
-    ): void;
-    touch(
-      sid: string,
-      session: SessionData,
-      callback?: (err?: any) => void
-    ): void;
+    all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void): void;
+    get(sid: string, callback: (err: any, session?: SessionData | null) => void): void;
+    set(sid: string, session: SessionData, callback?: (err?: any) => void): void;
+    touch(sid: string, session: SessionData, callback?: (err?: any) => void): void;
     destroy(sid: string, callback?: (err?: any) => void): void;
     destroyExpired(callback?: Function): void;
     length(callback?: (err: any, length?: number | null) => void): void;
     clear(callback?: (err?: any) => void): void;
   }
-  export type TypeofExpressSessionStoreObject = { Store: TypeofExpressSessionStore };
+  export type TypeofExpressSessionStoreObject = {
+    Store: TypeofExpressSessionStore;
+  };
   export type TypeofExpressSessionStore = typeof ExpressSessionStore;
 }

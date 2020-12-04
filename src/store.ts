@@ -9,7 +9,7 @@ import { SessionData, Store as ExpressSessionStore } from 'express-session';
 
 const ConnectMSSQLV2 = (
   connect: { Store: ExpressSessionStore } | { session: { Store: ExpressSessionStore } },
-) => {
+): ExpressSessionStore => {
   const Store = (connect as any).Store || (connect as any).session.Store;
   class MSSQLStore extends Store {
     table: string;

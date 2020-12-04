@@ -1,13 +1,17 @@
+/* eslint-disable object-curly-newline */
 /* eslint-disable no-undef */
 /* eslint-disable linebreak-style */
 /* eslint-disable no-useless-catch */
 import sql, { config as SQLConfig, NVarChar, MAX, DateTime, ConnectionPool } from 'mssql';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { Store as ExpressSessionStore, SessionData, Store } from 'express-session';
+import { SessionData, Store as ExpressSessionStore } from 'express-session';
 
-const ConnectMSSQLV2 = (): Store => {
-  class MSSQLStore extends Store implements ConnectMSSQLV2.IMSSQLStore {
+const ConnectMSSQLV2 = (
+  connect: { Store: ExpressSessionStore } | { session: { Store: ExpressSessionStore } },
+) => {
+  const Store = (connect as any).Store || (connect as any).session.Store;
+  class MSSQLStore extends Store {
     table: string;
 
     ttl: number;
@@ -73,7 +77,7 @@ const ConnectMSSQLV2 = (): Store => {
       }
     }
 
-    errorHandler(method: keyof ConnectMSSQLV2.IMSSQLStore, error: any, callback?: any) {
+    errorHandler(method: keyof MSSQLStore, error: any, callback?: any) {
       // Attachs sessionError event listener and emits on error on any
       // store error and includes method where error occured
       // eslint-disable-next-line no-shadow
@@ -127,7 +131,7 @@ const ConnectMSSQLV2 = (): Store => {
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    get2(sid: string, callback: (err: any, session?: SessionData | null) => void) {
+    get(sid: string, callback: (err: any, session?: SessionData | null) => void) {
       this.ready(async (error: any) => {
         if (error) {
           throw error;
@@ -173,7 +177,7 @@ const ConnectMSSQLV2 = (): Store => {
           const expires = new Date(
             isExpireBoolean || !session.cookie?.expires
               ? Date.now() + this.ttl
-              : (session.cookie.expires as Date)
+              : (session.cookie.expires as Date),
           );
           const request = (this.databaseConnection as ConnectionPool).request();
           await request
@@ -222,7 +226,7 @@ const ConnectMSSQLV2 = (): Store => {
           const expires = new Date(
             isExpireBoolean || !session.cookie?.expires
               ? Date.now() + this.ttl
-              : (session.cookie.expires as Date)
+              : (session.cookie.expires as Date),
           );
           const request = (this.databaseConnection as ConnectionPool).request();
           await request.input('sid', NVarChar(255), sid).input('expires', DateTime, expires).query(`
@@ -307,7 +311,7 @@ const ConnectMSSQLV2 = (): Store => {
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
-    length(callback: (err: any, length?: number | null) => void) {
+    length(callback: (err: any, length: number) => void) {
       this.ready(async (error: any) => {
         if (error) {
           throw error;
@@ -390,23 +394,23 @@ namespace ConnectMSSQLV2 {
     useUTC?: boolean;
   }
 
-  export type ReadyCallback = (err?: any, callback?: any) => Promise<any>;
+  // export type ReadyCallback = (err?: any, callback?: any) => Promise<any>;
 
-  export interface IMSSQLStore {
-    config: SQLConfig;
-    options?: StoreOptions;
-    databaseConnection: ConnectionPool | null;
-    all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void): void;
-    get(sid: string, callback: (err: any, session?: SessionData | null) => void): void;
-    set(sid: string, session: SessionData, callback?: (err?: any) => void): void;
-    touch(sid: string, session: SessionData, callback?: (err?: any) => void): void;
-    destroy(sid: string, callback?: (err?: any) => void): void;
-    destroyExpired(callback?: Function): void;
-    length(callback?: (err: any, length?: number | null) => void): void;
-    clear(callback?: (err?: any) => void): void;
-  }
-  export type TypeofExpressSessionStoreObject = {
-    Store: TypeofExpressSessionStore;
-  };
-  export type TypeofExpressSessionStore = typeof ExpressSessionStore;
+  // export interface IMSSQLStore {
+  //   config: SQLConfig;
+  //   options?: StoreOptions;
+  //   databaseConnection: ConnectionPool | null;
+  //   all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void): void;
+  //   get(sid: string, callback: (err: any, session?: SessionData | null) => void): void;
+  //   set(sid: string, session: SessionData, callback?: (err?: any) => void): void;
+  //   touch(sid: string, session: SessionData, callback?: (err?: any) => void): void;
+  //   destroy(sid: string, callback?: (err?: any) => void): void;
+  //   destroyExpired(callback?: Function): void;
+  //   length(callback?: (err: any, length?: number | null) => void): void;
+  //   clear(callback?: (err?: any) => void): void;
+  // }
+  // export type TypeofExpressSessionStoreObject = {
+  //   Store: TypeofExpressSessionStore;
+  // };
+  // export type TypeofExpressSessionStore = typeof ExpressSessionStore;
 }

@@ -1,10 +1,6 @@
-/* eslint-disable object-curly-newline */
-/* eslint-disable no-undef */
-/* eslint-disable linebreak-style */
-/* eslint-disable no-useless-catch */
-import sql, { config as SQLConfig, NVarChar, MAX, DateTime, ConnectionPool } from 'mssql';
-
-// eslint-disable-next-line import/no-extraneous-dependencies
+import sql, {
+  config as SQLConfig, NVarChar, MAX, DateTime, ConnectionPool,
+} from 'mssql';
 import { SessionData, Store as ExpressSessionStore } from 'express-session';
 
 const ConnectMSSQLV2 = (
@@ -41,19 +37,15 @@ const ConnectMSSQLV2 = (
     }
 
     private async initializeDatabase() {
-      try {
-        // Attachs connect event listener and emits on successful connection
-        this.databaseConnection.on('connect', () => this.emit('connect', this));
-        // Attachs error event listener and emits on failed connection
-        this.databaseConnection.on('error', (error) => this.emit('error', error));
+      // Attachs connect event listener and emits on successful connection
+      this.databaseConnection.on('connect', () => this.emit('connect', this));
+      // Attachs error event listener and emits on failed connection
+      this.databaseConnection.on('error', (error) => this.emit('error', error));
 
-        await this.databaseConnection.connect();
-        this.databaseConnection.emit('connect');
-        if (this.autoRemove) {
-          setInterval(() => this.destroyExpired(this.autoRemoveCallback), this.autoRemoveInterval);
-        }
-      } catch (error) {
-        throw error;
+      await this.databaseConnection.connect();
+      this.databaseConnection.emit('connect');
+      if (this.autoRemove) {
+        setInterval(() => this.destroyExpired(this.autoRemoveCallback), this.autoRemoveInterval);
       }
     }
 
@@ -90,8 +82,8 @@ const ConnectMSSQLV2 = (
     }
 
     // ////////////////////////////////////////////////////////////////
-    // Attempt to fetch all sessions
     /**
+     * Attempt to fetch all sessions
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
@@ -125,8 +117,8 @@ const ConnectMSSQLV2 = (
     }
 
     // ////////////////////////////////////////////////////////////////
-    // Attempt to fetch session the given sid
     /**
+     * Attempt to fetch session the given sid
      * @param sid
      * @param callback
      */
@@ -154,10 +146,8 @@ const ConnectMSSQLV2 = (
     }
 
     // ////////////////////////////////////////////////////////////////
-    // Commit the given session object associated
-    // with the given sid
     /**
-     *
+     * Commit the given session object associated with the given sid
      * @param sid
      * @param session
      * @param callback
@@ -204,9 +194,8 @@ const ConnectMSSQLV2 = (
     }
 
     // ////////////////////////////////////////////////////////////////
-    // Update the expiration date of the given sid
     /**
-     *
+     * Update the expiration date of the given sid
      * @param sid
      * @param data
      * @param callback
@@ -245,9 +234,8 @@ const ConnectMSSQLV2 = (
     }
 
     // ////////////////////////////////////////////////////////////////
-    // Destroy the session associated with the given sid
     /**
-     *
+     * Destroy the session associated with the given sid
      * @param sid
      * @param callback
      */
@@ -275,7 +263,10 @@ const ConnectMSSQLV2 = (
     }
 
     // ////////////////////////////////////////////////////////////////
-    // Destroy expired sessions
+    /**
+     * Destroy expired sessions
+     * @param callback
+     */
     // //////////////////////////////////////////////////////////////
     destroyExpired(callback: any) {
       this.ready(async (error: any) => {
@@ -306,8 +297,8 @@ const ConnectMSSQLV2 = (
     }
 
     // ////////////////////////////////////////////////////////////////
-    // Fetch number of sessions
     /**
+     * Fetch total number of sessions
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
@@ -331,8 +322,8 @@ const ConnectMSSQLV2 = (
     }
 
     // ////////////////////////////////////////////////////////////////
-    // Clear all sessions
     /**
+     * Clear all sessions
      * @param callback
      */
     // //////////////////////////////////////////////////////////////
@@ -362,7 +353,6 @@ const ConnectMSSQLV2 = (
 
 export = ConnectMSSQLV2;
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 namespace ConnectMSSQLV2 {
   export interface StoreOptions {
     /**

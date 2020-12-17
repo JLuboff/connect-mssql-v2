@@ -7,7 +7,7 @@
 
 # connect-mssql-v2
 
-SQL Server session store for Connect/Express based on [node-mssql][mssql-url] and the deprecated/abandon project [connect-mssql][connect-mssql-url].
+SQL Server session store for Connect/Express based on [node-mssql][mssql-url] and the deprecated/abandoned project [connect-mssql][connect-mssql-url].
 
 ## Warning 
 Typings will be changed in future versions due to awaiting `express-session` updated typings. Currently they may not be fully accurate.
@@ -18,7 +18,7 @@ Typings will be changed in future versions due to awaiting `express-session` upd
 
 ## Prerequisites
 
-Before you can use session store, you must create a table. Recomended table name is `sessions` but you can change it via options.
+Before you can use session store, you must create a table. Recommended table name is `sessions` but you can change it via options.
 
 ```sql
 CREATE TABLE [dbo].[sessions](

@@ -31,15 +31,13 @@ CREATE TABLE [dbo].[sessions](
 ## Usage
 Javascript
 ```javascript
-const session = require('express-session');
-const MSSQLStore = require('connect-mssql-v2')(session);
+const MSSQLStore = require('connect-mssql-v2');
 
 const config = {
   user: '...',
   password: '...',
   server: 'localhost', // You can use 'localhost\\instance' to connect to named instance
   database: '...',
-
   options: {
     encrypt: true // Use this if you're on Windows Azure
   }
@@ -53,17 +51,14 @@ app.use(
 );
 ```
 Typescript
-```javascript
-import session from 'express-session';
-import connectSessionStore from 'connect-mssql-v2';
-const MSSQLStore = connectSessionStore(session);
+```typescript
+import MSSQLStore from 'connect-mssql-v2';
 
 const config = {
   user: '...',
   password: '...',
   server: 'localhost', // You can use 'localhost\\instance' to connect to named instance
   database: '...',
-
   options: {
     encrypt: true // Use this if you're on Windows Azure
   }

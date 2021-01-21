@@ -1,23 +1,22 @@
-import expresssession from 'express-session';
+/* eslint-disable @typescript-eslint/no-shadow */
 import sql, { config } from 'mssql';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import sessionStore from '../src/store';
+import MSSQLStore from '../src/store';
 
-const MSSQLStore = sessionStore(expresssession);
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const TESTDATA = {
   somevalue: 'yes',
   somenumber: 123,
-  cookie: { expires: new Date() },
+  cookie: { expires: new Date(), originalMaxAge: 10000 },
 };
 const MODIFIEDDATA = {
   somevalue: 'no',
   somenumber: 456,
-  cookie: { expires: new Date() },
+  cookie: { expires: new Date(), originalMaxAge: 10000 },
 };
-const TOUCHED = { cookie: { expires: new Date() } };
+const TOUCHED = { cookie: { expires: new Date(), originalMaxAge: 10000 } };
 const sqlConfig: config = {
   user: process.env.SQLUSER,
   password: process.env.SQLPASSWORD,
@@ -138,6 +137,7 @@ describe('connect-mssql-v2', () => {
           {
             cookie: {
               expires: new Date(Date.now() - 60000),
+              originalMaxAge: 1000,
             },
           },
           (err: any) => {
@@ -150,6 +150,7 @@ describe('connect-mssql-v2', () => {
               {
                 cookie: {
                   expires: new Date(Date.now() - 60000),
+                  originalMaxAge: 1000,
                 },
               },
               (err: any) => {
@@ -232,7 +233,7 @@ describe('connect-mssql-v2', () => {
         });
 
         const errorHandler = store.errorHandler(
-          'test',
+          'test' as any,
           new Error('Test errorHandler'),
           () => true,
         );
@@ -253,7 +254,7 @@ describe('connect-mssql-v2', () => {
         });
 
         const errorHandler = store.errorHandler(
-          'test',
+          'test' as any,
           new Error('Test errorHandler'),
         );
 

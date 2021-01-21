@@ -1,10 +1,22 @@
 # ChangeLog
 All project updates will be documented in this file
 
-## [Unreleased]
-- Updated typings
-    - Currently awaiting updated `express-session` typings to update (I believe this will not be until v2 of `express-session` comes out)
-    - This will most likely have breaking changes (and thus be v2.0.0)
+## [v2.0.0] - 2021-01-20
+- Major Release with breaking changes
+    - Removed encapsulation around MSSQLStore, no longer requiring to pass in session store
+    - TS will now provide proper typings
+    - Updated test file to reflect changes
+    - Updated README to reflect changes
+- Updated packages to current version
+    - @types/mssql
+    - @types/jest
+    - @typescript-eslint/eslint-plugin
+    - @typescript-eslint/parser
+    - eslint
+    - husky
+    - lint-staged
+    - mssql
+    - typescript
 
 ## [v1.6.3] - 2020-10-07
 - Merged PR #33 submitted by @bradtaniguchi

@@ -104,6 +104,9 @@ app.use(session({
 
 To see all options please visit [node-mssql docs](https://github.com/patriksimek/node-mssql#cfg-basic).
 
+## Upgrading from v1.x.x to v2.x.x
+It is no longer required to pass in the `express-session` store. Please see the Usage section on the updated import/require method. 
+
 ## Contributions
 Contributions are welcome, please submit a PR which will be reviewed.
 

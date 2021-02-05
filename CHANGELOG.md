@@ -1,6 +1,13 @@
 # ChangeLog
 All project updates will be documented in this file
 
+## [v2.0.2] - 2021-02-05
+- Updated packages to current version
+    - @typescript-eslint/eslint-plugin
+    - @typescript-eslint/parser
+    - eslint
+    - lint-staged
+
 ## [v2.0.0] - 2021-01-20
 - Major Release with breaking changes
     - Removed encapsulation around MSSQLStore, no longer requiring to pass in session store

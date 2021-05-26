@@ -93,7 +93,7 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
         await this.initializeDatabase();
       }
       if (this.databaseConnection?.connected) {
-        return callback(null, null);
+        return await callback(null, null);
       }
       if (this.databaseConnection?.connecting) {
         return this.databaseConnection.once('connect', callback.bind(this));

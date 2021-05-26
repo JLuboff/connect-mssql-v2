@@ -22,6 +22,7 @@ const sqlConfig: config = {
   password: process.env.SQLPASSWORD,
   server: process.env.SQLSERVER as string,
   database: process.env.SQLDATABASE as string,
+  options: { trustServerCertificate: true },
 };
 
 beforeAll(async () => {
@@ -263,11 +264,12 @@ describe('connect-mssql-v2', () => {
     });
 
     test('Should emit an error listener', (done) => {
-      const localConfig = {
+      const localConfig: config = {
         user: process.env.SQLUSER,
         password: 'noGoodPassword',
         server: process.env.SQLSERVER as string,
         database: process.env.SQLDATABASE as string,
+        options: { trustServerCertificate: true },
       };
       const store = new MSSQLStore(localConfig, {
         table: 'Sessions',

@@ -1,6 +1,31 @@
 # ChangeLog
 All project updates will be documented in this file
 
+## [v2.1.0] - 2021-05-25
+- Updated README's to include required SQL User permissions
+    - In main README, updated example usage to include note on trustServerCertificate property being required if your instance of MS SQL is using a self signed certificate
+- Due to `jest^27.0.0`, created `jest.config.ts` file to specify testRunner as `jest-jasmine2` as opposed to new default of `jest-circus`
+    -Required installing `ts-node` as a devDependency
+- Updated store.test.ts
+    - Added test for `store.clear`
+    - Added `options: { trustServerCertificate: true }` to SQL config
+- Update packages to current version
+    - @types/jest                      
+    - @types/mssql                     
+    - @typescript-eslint/eslint-plugin 
+    - @typescript-eslint/parser        
+    - dotenv                           
+    - eslint                           
+    - eslint-config-airbnb-typescript  
+    - eslint-plugin-import             
+    - express-session                  
+    - husky                            
+    - jest                             
+    - lint-staged                      
+    - prettier                         
+    - typescript                       
+    - mssql          
+                  
 ## [v2.0.2] - 2021-02-05
 - Updated packages to current version
     - @typescript-eslint/eslint-plugin

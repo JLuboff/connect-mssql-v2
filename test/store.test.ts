@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-shadow */
-import sql, { config } from 'mssql';
+import sql, { config, ConnectionPool } from 'mssql';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
+import { SessionData } from 'express-session';
 import MSSQLStore from '../src/store';
 
 dotenv.config({ path: path.resolve(__dirname, '.env') });
@@ -57,9 +58,7 @@ describe('connect-mssql-v2', () => {
         expect(session).toBeTruthy();
         expect(session.somevalue).toEqual(TESTDATA.somevalue);
         expect(session.somenumber).toEqual(TESTDATA.somenumber);
-        expect(session.cookie.expires).toEqual(
-          TESTDATA.cookie.expires.toISOString(),
-        );
+        expect(session.cookie.expires).toEqual(TESTDATA.cookie.expires.toISOString());
         return done();
       });
     });
@@ -73,9 +72,7 @@ describe('connect-mssql-v2', () => {
         expect(session).toBeTruthy();
         expect(session.somevalue).toEqual(MODIFIEDDATA.somevalue);
         expect(session.somenumber).toEqual(MODIFIEDDATA.somenumber);
-        expect(session.cookie.expires).toEqual(
-          MODIFIEDDATA.cookie.expires.toISOString(),
-        );
+        expect(session.cookie.expires).toEqual(MODIFIEDDATA.cookie.expires.toISOString());
         return done();
       });
     });
@@ -87,9 +84,7 @@ describe('connect-mssql-v2', () => {
         if (err) return done(err);
 
         expect(session).toBeTruthy();
-        expect(session.cookie.expires).toEqual(
-          TOUCHED.cookie.expires.toISOString(),
-        );
+        expect(session.cookie.expires).toEqual(TOUCHED.cookie.expires.toISOString());
         return done();
       });
     });
@@ -115,6 +110,31 @@ describe('connect-mssql-v2', () => {
 
         expect(length).toBe(0);
         return done();
+      });
+    });
+    test('Should clear all sessions', async (done) => {
+      await store.set('5678DEF', TESTDATA, done);
+      await store.set('GHI9876', TESTDATA, done);
+      await store.set('JKLMN23', TESTDATA, done);
+      /**
+       * Verify session records prior to clearing all
+       */
+      store.all(async (err: any, session: any) => {
+        if (err) return done(err);
+
+        expect(Object.keys(session)).toHaveLength(3);
+
+        return store.clear((err) => {
+          if (err) return done(err);
+
+          return store.all((err: any, session: any) => {
+            if (err) return done(err);
+
+            expect(session).toBeNull();
+
+            return done();
+          });
+        });
       });
     });
   });
@@ -190,22 +210,6 @@ describe('connect-mssql-v2', () => {
     });
   });
 
-  describe('errors test suite', () => {
-    const store = new MSSQLStore(sqlConfig, {
-      table: 'Sessions',
-    });
-    test('Should wait for connection establishment', (done) => {
-      store.get('asdf', done);
-    });
-    test('Should report error when connection is closed', (done) => {
-      store.databaseConnection!.close();
-      store.get('asdf', (err: any) => {
-        expect(err).toBeTruthy();
-        return done();
-      });
-    });
-  });
-
   describe('emitters test suite', () => {
     test('Should emit a connect listener', (done) => {
       const store = new MSSQLStore(sqlConfig, {
@@ -254,10 +258,7 @@ describe('connect-mssql-v2', () => {
           done();
         });
 
-        const errorHandler = store.errorHandler(
-          'test' as any,
-          new Error('Test errorHandler'),
-        );
+        const errorHandler = store.errorHandler('test' as any, new Error('Test errorHandler'));
 
         expect(errorHandler).toBeFalsy();
       });
@@ -279,9 +280,97 @@ describe('connect-mssql-v2', () => {
 
       store.on('error', (error: any) => {
         expect(error.name).toEqual('ConnectionError');
-        expect(error.originalError.message).toEqual(
-          expect.stringContaining('Login failed'),
-        );
+        expect(error.originalError.message).toEqual(expect.stringContaining('Login failed'));
+        return done();
+      });
+    });
+  });
+
+  describe('errors test suite', () => {
+    const store = new MSSQLStore(sqlConfig, {
+      table: 'Sessions',
+    });
+    test('Should wait for connection establishment', (done) => {
+      store.get('asdf', done);
+    });
+    test('Should report error when connection is closed', (done) => {
+      store.databaseConnection!.close();
+      store.get('asdf', (err: any) => {
+        expect(err).toBeTruthy();
+        return done();
+      });
+    });
+
+    class TestStore extends MSSQLStore {
+      // eslint-disable-next-line consistent-return
+      async ready(callback: (err?: any, callback?: any) => Promise<any>) {
+        try {
+          throw new Error('Test error');
+        } catch (error) {
+          if (callback) {
+            callback(error);
+          }
+          return this.databaseConnection!.emit('error', error);
+        }
+      }
+    }
+
+    const testStore = new TestStore(sqlConfig, { table: 'Sessions' });
+    testStore.on('sessionError', (method, error) => {
+      console.log(method, error);
+    });
+    testStore.on('error', (error) => {
+      console.log(error);
+    });
+    test('Should throw an error when running method: all', async (done) => {
+      await testStore.all((err: any) => {
+        console.log(`all error: ${err}`);
+        expect(err).not.toBeNull();
+        expect(err.message).toBe('Test error');
+        return done();
+      });
+    });
+    test('Should throw an error when running method: set', (done) => {
+      testStore.set('1234ABC', TESTDATA, (err: any) => {
+        expect(err).not.toBeNull();
+        expect(err.message).toBe('Test error');
+        return done();
+      });
+    });
+
+    test('Should throw an error when running method: touch', (done) => {
+      testStore.touch('1234ABC', TOUCHED, (err: any) => {
+        expect(err).not.toBeNull();
+        expect(err.message).toBe('Test error');
+        return done();
+      });
+    });
+    test('Should throw an error when running method: destroy', (done) => {
+      testStore.destroy('1234ABC', (err: any) => {
+        expect(err).not.toBeNull();
+        expect(err.message).toBe('Test error');
+        return done();
+      });
+    });
+    test('Should throw an error when running method: destroyExpired', (done) => {
+      testStore.destroyExpired((err: any) => {
+        expect(err).not.toBeNull();
+        expect(err.message).toBe('Test error');
+        return done();
+      });
+    });
+
+    test('Should throw an error when running method: length', (done) => {
+      testStore.length((err: any) => {
+        expect(err).not.toBeNull();
+        expect(err.message).toBe('Test error');
+        return done();
+      });
+    });
+    test('Should throw an error when running method: clear', (done) => {
+      testStore.clear((err: any) => {
+        expect(err).not.toBeNull();
+        expect(err.message).toBe('Test error');
         return done();
       });
     });

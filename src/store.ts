@@ -101,7 +101,7 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
       throw new Error('Connection is closed.');
     } catch (error) {
       if (callback) {
-        callback(error);
+        await callback(error);
       }
       return this.databaseConnection!.emit('error', error);
     }
@@ -135,7 +135,7 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
   // //////////////////////////////////////////////////////////////
   async all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void) {
     try {
-      return await this.ready(async (error: any) => {
+      const promiseBody = async (error: any) => {
         if (error) {
           throw error;
         }
@@ -155,7 +155,9 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
         }
 
         return callback(null, null);
-      });
+      };
+
+      return await this.ready(promiseBody);
     } catch (err) {
       return this.errorHandler('all', err, callback);
     }

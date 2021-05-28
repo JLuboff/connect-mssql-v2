@@ -323,12 +323,17 @@ describe('connect-mssql-v2', () => {
       console.log(error);
     });
     test('Should throw an error when running method: all', async (done) => {
-      await testStore.all((err: any) => {
-        console.log(`all error: ${err}`);
-        expect(err).not.toBeNull();
-        expect(err.message).toBe('Test error');
+      try {
+        await testStore.all((err: any) => {
+          if (err) throw err;
+
+          return done();
+        });
+      } catch (error) {
+        expect(error).not.toBeNull();
+        expect(error.message).toContain('Test error');
         return done();
-      });
+      }
     });
     test('Should throw an error when running method: set', (done) => {
       testStore.set('1234ABC', TESTDATA, (err: any) => {

@@ -395,5 +395,11 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
     });
   }
 }
-
+/**
+ * 08/30/2021 - JL
+ * * To correct an issue where you could not correctly require within a JS file without
+ * * targeting the default export, we have added the line below. Should provide non-breaking fix.
+ * * Might be modified for future versions with potential breaking change.
+ */
+module.exports = MSSQLStore;
 export default MSSQLStore;

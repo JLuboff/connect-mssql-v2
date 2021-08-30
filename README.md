@@ -37,7 +37,8 @@ const config = {
   database: '...',
   options: {
     encrypt: true, // Use this if you're on Windows Azure
-    trustServerCertificate: true //use this if your MS SQL instance uses a self signed certificate
+    trustServerCertificate: true // use this if your MS SQL instance uses a self signed certificate
+
   }
 };
 
@@ -59,7 +60,8 @@ const config = {
   database: '...',
   options: {
     encrypt: true, // Use this if you're on Windows Azure
-    trustServerCertificate: true //use this if your MS SQL instance uses a self signed certificate
+    trustServerCertificate: true // use this if your MS SQL instance uses a self signed certificate
+
   }
 };
 

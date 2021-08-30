@@ -1,6 +1,27 @@
 # ChangeLog
 All project updates will be documented in this file
 
+## [v2.1.0] - 2021-08-30
+- Fix #47
+    - Added module.exports = MSSQLStore to store file to correct issue with using require statement
+    - Added new JS test file to verify require statement
+- README updated to address changes to SQL Config options as required for `mssql` changes as well as noting required database user permissions
+- Updated packages to current version
+    - @types/express-session             ^1.17.3  →  ^1.17.4
+    - @types/mssql                        ^6.0.7  →   ^7.1.3
+    - @typescript-eslint/eslint-plugin   ^4.14.2  →  ^4.30.0
+    - @typescript-eslint/parser          ^4.14.2  →  ^4.30.0
+    - dotenv                              ^8.2.0  →  ^10.0.0
+    - eslint                             ^7.19.0  →  ^7.32.0
+    - eslint-plugin-import               ^2.22.1  →  ^2.24.2
+    - express-session                    ^1.17.1  →  ^1.17.2
+    - husky                               ^4.3.8  →   ^7.0.2
+    - lint-staged                        ^10.5.4  →  ^11.1.2
+    - prettier                            ^2.2.1  →   ^2.3.2
+    - typescript                          ^4.1.3  →   ^4.4.2
+    - mssql                               ^6.3.1  →   ^7.2.1
+- Added ts-node package to properly handle jest.config.ts file
+
 ## [v2.0.2] - 2021-02-05
 - Updated packages to current version
     - @typescript-eslint/eslint-plugin

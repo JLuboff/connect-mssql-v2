@@ -108,7 +108,19 @@ app.use(session({
 
 To see all options please visit [node-mssql docs](https://github.com/tediousjs/node-mssql#general-same-for-all-drivers).
 
+## Upgrading from v2.x.x to v3.x.x
+
+The key step to upgrading is to include 
+```typescript
+trustServerCertificate: true 
+```
+in your options object for the store config (see either javascript or typescript example) if running a local instance of MS SQL with a self signed certificate. If you do not provide this, you will get a connection error
+```
+ConnectionError: Failed to connect to databaseserver:1433 - self signed certificate
+```
+
 ## Upgrading from v1.x.x to v2.x.x
+
 It is no longer required to pass in the `express-session` store. Please see the Usage section on the updated import/require method. 
 
 ## Contributions

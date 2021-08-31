@@ -57,9 +57,7 @@ describe('connect-mssql-v2', () => {
         expect(session).toBeTruthy();
         expect(session.somevalue).toEqual(TESTDATA.somevalue);
         expect(session.somenumber).toEqual(TESTDATA.somenumber);
-        expect(session.cookie.expires).toEqual(
-          TESTDATA.cookie.expires.toISOString(),
-        );
+        expect(session.cookie.expires).toEqual(TESTDATA.cookie.expires.toISOString());
         return done();
       });
     });
@@ -73,9 +71,7 @@ describe('connect-mssql-v2', () => {
         expect(session).toBeTruthy();
         expect(session.somevalue).toEqual(MODIFIEDDATA.somevalue);
         expect(session.somenumber).toEqual(MODIFIEDDATA.somenumber);
-        expect(session.cookie.expires).toEqual(
-          MODIFIEDDATA.cookie.expires.toISOString(),
-        );
+        expect(session.cookie.expires).toEqual(MODIFIEDDATA.cookie.expires.toISOString());
         return done();
       });
     });
@@ -87,9 +83,7 @@ describe('connect-mssql-v2', () => {
         if (err) return done(err);
 
         expect(session).toBeTruthy();
-        expect(session.cookie.expires).toEqual(
-          TOUCHED.cookie.expires.toISOString(),
-        );
+        expect(session.cookie.expires).toEqual(TOUCHED.cookie.expires.toISOString());
         return done();
       });
     });
@@ -254,10 +248,7 @@ describe('connect-mssql-v2', () => {
           done();
         });
 
-        const errorHandler = store.errorHandler(
-          'test' as any,
-          new Error('Test errorHandler'),
-        );
+        const errorHandler = store.errorHandler('test' as any, new Error('Test errorHandler'));
 
         expect(errorHandler).toBeFalsy();
       });
@@ -279,9 +270,7 @@ describe('connect-mssql-v2', () => {
 
       store.on('error', (error: any) => {
         expect(error.name).toEqual('ConnectionError');
-        expect(error.originalError.message).toEqual(
-          expect.stringContaining('Login failed'),
-        );
+        expect(error.originalError.message).toEqual(expect.stringContaining('Login failed'));
         return done();
       });
     });

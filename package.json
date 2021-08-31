@@ -1,6 +1,6 @@
 {
   "name": "connect-mssql-v2",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "MS SQL Server session store for Express Session",
   "main": "dist/src/store",
   "types": "dist/src/store.d.ts",
@@ -38,7 +38,8 @@
     "@typescript-eslint/parser": "^4.30.0",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
-    "eslint-config-airbnb-typescript": "^12.0.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-airbnb-typescript": "^14.0.0",
     "eslint-plugin-import": "^2.24.2",
     "express-session": "^1.17.2",
     "husky": "^7.0.2",

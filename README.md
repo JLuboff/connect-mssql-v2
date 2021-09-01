@@ -15,7 +15,7 @@ SQL Server session store for Connect/Express based on [node-mssql][mssql-url] an
 
 ## Prerequisites
 
-Before you can use session store, you must create a table. Recommended table name is `sessions` but you can change it via options.
+Before you can use session store, you must create a table. Recommended table name is `sessions` but you can change it via options. The database user must have `db_datareader`, `db_datawriter`, and `db_ddladmin` permissions.
 
 ```sql
 CREATE TABLE [dbo].[sessions](
@@ -36,7 +36,9 @@ const config = {
   server: 'localhost', // You can use 'localhost\\instance' to connect to named instance
   database: '...',
   options: {
-    encrypt: true // Use this if you're on Windows Azure
+    encrypt: true, // Use this if you're on Windows Azure
+    trustServerCertificate: true // use this if your MS SQL instance uses a self signed certificate
+
   }
 };
 
@@ -57,7 +59,9 @@ const config = {
   server: 'localhost', // You can use 'localhost\\instance' to connect to named instance
   database: '...',
   options: {
-    encrypt: true // Use this if you're on Windows Azure
+    encrypt: true, // Use this if you're on Windows Azure
+    trustServerCertificate: true // use this if your MS SQL instance uses a self signed certificate
+
   }
 };
 
@@ -102,9 +106,21 @@ app.use(session({
 
 ## Configuration
 
-To see all options please visit [node-mssql docs](https://github.com/patriksimek/node-mssql#cfg-basic).
+To see all options please visit [node-mssql docs](https://github.com/tediousjs/node-mssql#general-same-for-all-drivers).
+
+## Upgrading from v2.x.x to v3.x.x
+
+The key step to upgrading is to include 
+```typescript
+trustServerCertificate: true 
+```
+in your options object for the store config (see either javascript or typescript example) if running a local instance of MS SQL with a self signed certificate. If you do not provide this, you will get a connection error
+```
+ConnectionError: Failed to connect to databaseserver:1433 - self signed certificate
+```
 
 ## Upgrading from v1.x.x to v2.x.x
+
 It is no longer required to pass in the `express-session` store. Please see the Usage section on the updated import/require method. 
 
 ## Contributions

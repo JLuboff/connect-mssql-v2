@@ -5,3 +5,4 @@ dist
 *.env
 */test.ts
 *server.test.ts
+coverage

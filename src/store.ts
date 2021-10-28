@@ -1,5 +1,13 @@
 import sql, {
-  config as SQLConfig, NVarChar, MAX, DateTime, ConnectionPool,
+  config as SQLConfig,
+  NVarChar,
+  MAX,
+  DateTime,
+  ConnectionPool,
+  ISqlTypeWithLength,
+  IResult,
+  IRecordSet,
+  ISqlTypeFactoryWithNoParams,
 } from 'mssql';
 import session, { SessionData, Store as ExpressSessionStore } from 'express-session';
 
@@ -44,6 +52,17 @@ export interface MSSQLStoreDef {
   destroyExpired(callback?: Function): void;
   length(callback: (err: any, length?: number | null) => void): void;
   clear(callback?: (err?: any) => void): void;
+}
+type SQLDataTypes = ISqlTypeWithLength | ISqlTypeFactoryWithNoParams;
+interface QueryRunnerProps {
+  inputParameters?: {
+    [key: string]: {
+      value: string | Date;
+      dataType: SQLDataTypes;
+    };
+  }[];
+  expectReturn: boolean;
+  queryStatement: string;
 }
 class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   table: string;
@@ -115,12 +134,32 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   private getExpirationDate(sessionCookie: session.Cookie) {
     const isExpireBoolean = !!sessionCookie && typeof sessionCookie.expires === 'boolean';
     const expires = new Date(
-      isExpireBoolean || !sessionCookie?.expires
-        ? Date.now() + this.ttl
-        : sessionCookie.expires,
+      isExpireBoolean || !sessionCookie?.expires ? Date.now() + this.ttl : sessionCookie.expires,
     );
 
     return expires;
+  }
+
+  private async queryRunner<T>(props: QueryRunnerProps): Promise<IRecordSet<T> | null> {
+    const request = await this.databaseConnection.request();
+    const { inputParameters, expectReturn, queryStatement } = props;
+    /**
+     * If any inputParamters exist, attach to request object
+     */
+    inputParameters?.forEach((parameter) => {
+      const [key, { value, dataType }] = Object.entries(parameter)[0];
+      request.input(key, dataType, value);
+    });
+    /**
+     * Run query against database
+     */
+    const result: IResult<T> = await request.query(queryStatement);
+
+    if (expectReturn) {
+      return result.recordset;
+    }
+
+    return null;
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -152,16 +191,15 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     try {
       const isReady = await this.dbReadyCheck();
       if (isReady) {
-        const request = (this.databaseConnection as ConnectionPool).request();
-        const result: {
-          recordset: { sid: string; session: any }[];
-        } = await request.query(`
-              SELECT sid, session FROM ${this.table}`);
+        const queryResult = await this.queryRunner<{ sid: string; session: string }>({
+          queryStatement: `SELECT sid, session FROM ${this.table}`,
+          expectReturn: true,
+        });
 
-        if (result.recordset.length) {
+        if (queryResult?.length) {
           const returnObject: { [sid: string]: SessionData } = {};
-          for (let i = 0; i < result.recordset.length; i += 1) {
-            returnObject[result.recordset[i].sid] = JSON.parse(result.recordset[i].session);
+          for (let i = 0; i < queryResult.length; i += 1) {
+            returnObject[queryResult[i].sid] = JSON.parse(queryResult[i].session);
           }
 
           return callback(null, returnObject);
@@ -184,12 +222,16 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     try {
       const isReady = await this.dbReadyCheck();
       if (isReady) {
-        const request = (this.databaseConnection as ConnectionPool).request();
-        const result = await request.input('sid', NVarChar(255), sid).query(`
-              SELECT session FROM ${this.table} WHERE sid = @sid`);
+        const queryResult = await this.queryRunner<{ session: string }>({
+          inputParameters: [{ sid: { value: sid, dataType: NVarChar(255) } }],
+          queryStatement: `SELECT session 
+                           FROM ${this.table}
+                           WHERE sid = @sid`,
+          expectReturn: true,
+        });
 
-        if (result.recordset.length) {
-          return callback(null, JSON.parse(result.recordset[0].session));
+        if (queryResult?.length) {
+          return callback(null, JSON.parse(queryResult[0].session));
         }
       }
 
@@ -212,19 +254,22 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
       const isReady = await this.dbReadyCheck();
       if (isReady) {
         const expires = this.getExpirationDate(currentSession.cookie);
-        const request = (this.databaseConnection as ConnectionPool).request();
-        await request
-          .input('sid', NVarChar(255), sid)
-          .input('session', NVarChar(MAX), JSON.stringify(currentSession))
-          .input('expires', DateTime, expires).query(`
-              UPDATE ${this.table} 
-                SET session = @session, expires = @expires 
-                WHERE sid = @sid;
-                IF @@ROWCOUNT = 0 
-                  BEGIN
-                    INSERT INTO ${this.table} (sid, session, expires)
-                      VALUES (@sid, @session, @expires)
-                  END;`);
+        await this.queryRunner({
+          inputParameters: [
+            { sid: { value: sid, dataType: NVarChar(255) } },
+            { session: { value: JSON.stringify(currentSession), dataType: NVarChar(MAX) } },
+            { expires: { value: expires, dataType: DateTime } },
+          ],
+          queryStatement: `UPDATE ${this.table} 
+                           SET session = @session, expires = @expires 
+                           WHERE sid = @sid;
+                           IF @@ROWCOUNT = 0 
+                            BEGIN
+                              INSERT INTO ${this.table} (sid, session, expires)
+                                VALUES (@sid, @session, @expires)
+                            END;`,
+          expectReturn: false,
+        });
 
         if (callback) {
           return callback();
@@ -250,11 +295,16 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
       const isReady = await this.dbReadyCheck();
       if (isReady) {
         const expires = this.getExpirationDate(currentSession.cookie);
-        const request = (this.databaseConnection as ConnectionPool).request();
-        await request.input('sid', NVarChar(255), sid).input('expires', DateTime, expires).query(`
-              UPDATE ${this.table} 
-                SET expires = @expires 
-              WHERE sid = @sid`);
+        await this.queryRunner({
+          inputParameters: [
+            { sid: { value: sid, dataType: NVarChar(255) } },
+            { expires: { value: expires, dataType: DateTime } },
+          ],
+          queryStatement: `UPDATE ${this.table} 
+                           SET expires = @expires 
+                           WHERE sid = @sid`,
+          expectReturn: false,
+        });
 
         if (callback) {
           return callback();
@@ -278,10 +328,12 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     try {
       const isReady = await this.dbReadyCheck();
       if (isReady) {
-        const request = (this.databaseConnection as ConnectionPool).request();
-        await request.input('sid', NVarChar(255), sid).query(`
-              DELETE FROM ${this.table} 
-              WHERE sid = @sid`);
+        await this.queryRunner({
+          inputParameters: [{ sid: { value: sid, dataType: NVarChar(255) } }],
+          queryStatement: `DELETE FROM ${this.table} 
+                           WHERE sid = @sid`,
+          expectReturn: false,
+        });
 
         if (callback) {
           return callback();
@@ -304,10 +356,11 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     try {
       const isReady = await this.dbReadyCheck();
       if (isReady) {
-        const request = (this.databaseConnection as ConnectionPool).request();
-        await request.query(`
-              DELETE FROM ${this.table} 
-              WHERE expires <= GET${this.useUTC ? 'UTC' : ''}DATE()`);
+        await this.queryRunner({
+          queryStatement: `DELETE FROM ${this.table} 
+                           WHERE expires <= GET${this.useUTC ? 'UTC' : ''}DATE()`,
+          expectReturn: false,
+        });
 
         if (this.autoRemoveCallback) {
           this.autoRemoveCallback();
@@ -336,12 +389,13 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     try {
       const isReady = await this.dbReadyCheck();
       if (isReady) {
-        const request = (this.databaseConnection as ConnectionPool).request();
-        const result = await request.query(`
-              SELECT COUNT(sid) AS length
-              FROM ${this.table}`);
+        const queryResult = await this.queryRunner<{ length: number }>({
+          queryStatement: `SELECT COUNT(sid) AS length
+                           FROM ${this.table}`,
+          expectReturn: true,
+        });
 
-        return callback(null, result.recordset[0].length);
+        return callback(null, queryResult?.[0].length ?? 0);
       }
       return callback(null, 0);
     } catch (err) {
@@ -359,9 +413,10 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     try {
       const isReady = await this.dbReadyCheck();
       if (isReady) {
-        const request = (this.databaseConnection as ConnectionPool).request();
-        await request.query(`
-              TRUNCATE TABLE ${this.table}`);
+        await this.queryRunner({
+          queryStatement: `TRUNCATE TABLE ${this.table}`,
+          expectReturn: false,
+        });
 
         if (callback) {
           return callback();

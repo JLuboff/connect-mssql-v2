@@ -32,7 +32,7 @@ export interface StoreOptions {
    */
   useUTC?: boolean;
 }
-export interface IMSSQLStore {
+export interface MSSQLStoreDef {
   config: SQLConfig;
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
@@ -45,7 +45,7 @@ export interface IMSSQLStore {
   length(callback: (err: any, length?: number | null) => void): void;
   clear(callback?: (err?: any) => void): void;
 }
-class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
+class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   table: string;
 
   ttl: number;
@@ -132,7 +132,7 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
    * @param callback
    */
   // ////////////////////////////////////////////////////////////////
-  errorHandler(method: keyof IMSSQLStore, error: any, callback?: any) {
+  errorHandler(method: keyof MSSQLStoreDef, error: any, callback?: any) {
     // eslint-disable-next-line no-shadow
     this.databaseConnection.once('sessionError', () => this.emit('sessionError', error, method));
     this.databaseConnection.emit('sessionError', error, method);

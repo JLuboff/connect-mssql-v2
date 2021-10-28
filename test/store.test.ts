@@ -87,17 +87,17 @@ describe('connect-mssql-v2', () => {
         return done();
       });
     });
-    test('Should get all existing sessions', async (done) => {
-      await store.set('5678DEF', TESTDATA, done);
+    test('Should get all existing sessions', (done) => {
+      store.set('5678DEF', TESTDATA, () => {
+        store.all((err: any, session: any) => {
+          if (err) return done(err);
 
-      store.all((err: any, session: any) => {
-        if (err) return done(err);
+          expect(Object.keys(session)).toHaveLength(2);
+          expect(session['5678DEF'].somevalue).toBe('yes');
 
-        expect(Object.keys(session)).toHaveLength(2);
-        expect(session['5678DEF'].somevalue).toBe('yes');
-
-        store.destroy('5678DEF');
-        return done();
+          store.destroy('5678DEF');
+          return done();
+        });
       });
     });
     test('Should remove created session', (done) => {

@@ -17,6 +17,7 @@ All project updates will be documented in this file
   - prettier                            ^2.3.2  →   ^2.4.1
   - ts-node                            ^10.2.1  →  ^10.4.0
   - typescript                          ^4.4.2  →   ^4.4.4
+- Fixed a test that was using async/await. Moved the secondary function (with expect) to outer function callback.
   
 ## [v3.0.0] - 2021-08-31
 

@@ -2,6 +2,22 @@
 
 All project updates will be documented in this file
 
+## [v3.0.1] - 2021-10-28
+- Updated packages to current version
+  - @types/jest                       ^26.0.20  →  ^27.0.2
+  - @types/mssql                        ^7.1.3  →   ^7.1.4
+  - @typescript-eslint/eslint-plugin   ^4.30.0  →   ^5.2.0
+  - @typescript-eslint/parser          ^4.30.0  →   ^5.2.0
+  - eslint                             ^7.32.0  →   ^8.1.0
+  - eslint-config-airbnb-typescript    ^14.0.0  →  ^14.0.1
+  - eslint-plugin-import               ^2.24.2  →  ^2.25.2
+  - husky                               ^7.0.2  →   ^7.0.4
+  - jest                               ^26.6.3  →  ^27.3.1
+  - lint-staged                        ^11.1.2  →  ^11.2.6
+  - prettier                            ^2.3.2  →   ^2.4.1
+  - ts-node                            ^10.2.1  →  ^10.4.0
+  - typescript                          ^4.4.2  →   ^4.4.4
+  
 ## [v3.0.0] - 2021-08-31
 
 - Fix #47

@@ -87,23 +87,21 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
     }
   }
 
-  private async ready(callback: (err?: any, callback?: any) => Promise<any>) {
+  private async dbReadyCheck() {
     try {
       if (!this.databaseConnection.connected && !this.databaseConnection.connecting) {
         await this.initializeDatabase();
       }
       if (this.databaseConnection?.connected) {
-        return await callback(null, null);
+        return true;
       }
       if (this.databaseConnection?.connecting) {
-        return this.databaseConnection.once('connect', callback.bind(this));
+        return this.databaseConnection.once('connect', () => 'Connecting...');
       }
       throw new Error('Connection is closed.');
     } catch (error) {
-      if (callback) {
-        callback(error);
-      }
-      return this.databaseConnection!.emit('error', error);
+      this.databaseConnection!.emit('error', error);
+      return error;
     }
   }
 
@@ -132,13 +130,10 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void) {
-    this.ready(async (error: any) => {
-      if (error) {
-        throw error;
-      }
-
-      try {
+  async all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void) {
+    try {
+      const isReady = await this.dbReadyCheck();
+      if (isReady) {
         const request = (this.databaseConnection as ConnectionPool).request();
         const result: {
           recordset: { sid: string; session: any }[];
@@ -153,12 +148,11 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
 
           return callback(null, returnObject);
         }
-
-        return callback(null, null);
-      } catch (err) {
-        return this.errorHandler('all', err, callback);
       }
-    });
+      return callback(null, null);
+    } catch (err) {
+      return this.errorHandler('all', err, callback);
+    }
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -168,13 +162,10 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  get(sid: string, callback: (err: any, session?: SessionData | null) => void) {
-    this.ready(async (error: any) => {
-      if (error) {
-        throw error;
-      }
-
-      try {
+  async get(sid: string, callback: (err: any, session?: SessionData | null) => void) {
+    try {
+      const isReady = await this.dbReadyCheck();
+      if (isReady) {
         const request = (this.databaseConnection as ConnectionPool).request();
         const result = await request.input('sid', NVarChar(255), sid).query(`
               SELECT session FROM ${this.table} WHERE sid = @sid`);
@@ -182,12 +173,12 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
         if (result.recordset.length) {
           return callback(null, JSON.parse(result.recordset[0].session));
         }
-
-        return callback(null, null);
-      } catch (err) {
-        return this.errorHandler('get', err, callback);
       }
-    });
+
+      return callback(null, null);
+    } catch (err) {
+      return this.errorHandler('get', err, callback);
+    }
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -198,17 +189,14 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  set(sid: string, session: SessionData, callback?: (err?: any) => void) {
-    this.ready(async (error: any) => {
-      if (error) {
-        throw error;
-      }
-
-      try {
+  async set(sid: string, session: SessionData, callback?: (err?: any) => void) {
+    try {
+      const isReady = await this.dbReadyCheck();
+      if (isReady) {
         /**
-         * Verify session.cookie.expires is not a boolean. If so, use current time along with
-         * ttl else cast session.cookie.expires to Date to avoid TS error
-         */
+           * Verify session.cookie.expires is not a boolean. If so, use current time along with
+           * ttl else cast session.cookie.expires to Date to avoid TS error
+           */
         const isExpireBoolean = !!session.cookie && typeof session.cookie.expires === 'boolean';
         const expires = new Date(
           isExpireBoolean || !session.cookie?.expires
@@ -232,11 +220,12 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
         if (callback) {
           return callback();
         }
-        return null;
-      } catch (err) {
-        return this.errorHandler('set', err, callback);
       }
-    });
+
+      return null;
+    } catch (err) {
+      return this.errorHandler('set', err, callback);
+    }
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -247,17 +236,14 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  touch(sid: string, session: SessionData, callback: (err?: any) => void) {
-    this.ready(async (error: any) => {
-      if (error) {
-        throw error;
-      }
-
-      try {
+  async touch(sid: string, session: SessionData, callback: (err?: any) => void) {
+    try {
+      const isReady = await this.dbReadyCheck();
+      if (isReady) {
         /**
-         * Verify session.cookie.expires is not a boolean. If so, use current time along with
-         * ttl else cast session.cookie.expires to Date to avoid TS error
-         */
+   * Verify session.cookie.expires is not a boolean. If so, use current time along with
+   * ttl else cast session.cookie.expires to Date to avoid TS error
+   */
         const isExpireBoolean = !!session.cookie && typeof session.cookie.expires === 'boolean';
         const expires = new Date(
           isExpireBoolean || !session.cookie?.expires
@@ -273,11 +259,12 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
         if (callback) {
           return callback();
         }
-        return null;
-      } catch (err) {
-        return this.errorHandler('touch', err, callback);
       }
-    });
+
+      return null;
+    } catch (err) {
+      return this.errorHandler('touch', err, callback);
+    }
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -287,13 +274,10 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  destroy(sid: string, callback?: (err?: any) => void) {
-    this.ready(async (error: any) => {
-      if (error) {
-        throw error;
-      }
-
-      try {
+  async destroy(sid: string, callback?: (err?: any) => void) {
+    try {
+      const isReady = await this.dbReadyCheck();
+      if (isReady) {
         const request = (this.databaseConnection as ConnectionPool).request();
         await request.input('sid', NVarChar(255), sid).query(`
               DELETE FROM ${this.table} 
@@ -302,11 +286,12 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
         if (callback) {
           return callback();
         }
-        return null;
-      } catch (err) {
-        return this.errorHandler('destroy', err, callback);
       }
-    });
+
+      return null;
+    } catch (err) {
+      return this.errorHandler('destroy', err, callback);
+    }
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -315,13 +300,10 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  destroyExpired(callback: any) {
-    this.ready(async (error: any) => {
-      if (error) {
-        throw error;
-      }
-
-      try {
+  async destroyExpired(callback: any) {
+    try {
+      const isReady = await this.dbReadyCheck();
+      if (isReady) {
         const request = (this.databaseConnection as ConnectionPool).request();
         await request.query(`
               DELETE FROM ${this.table} 
@@ -333,14 +315,15 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
         if (callback) {
           return callback();
         }
-        return null;
-      } catch (err) {
-        if (this.autoRemoveCallback) {
-          this.autoRemoveCallback(err);
-        }
-        return this.errorHandler('destroyExpired', err, callback);
       }
-    });
+
+      return null;
+    } catch (err) {
+      if (this.autoRemoveCallback) {
+        this.autoRemoveCallback(err);
+      }
+      return this.errorHandler('destroyExpired', err, callback);
+    }
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -349,23 +332,21 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  length(callback: (err: any, length: number) => void) {
-    this.ready(async (error: any) => {
-      if (error) {
-        throw error;
-      }
-
-      try {
+  async length(callback: (err: any, length: number) => void) {
+    try {
+      const isReady = await this.dbReadyCheck();
+      if (isReady) {
         const request = (this.databaseConnection as ConnectionPool).request();
         const result = await request.query(`
               SELECT COUNT(sid) AS length
               FROM ${this.table}`);
 
         return callback(null, result.recordset[0].length);
-      } catch (err) {
-        return this.errorHandler('length', err, callback);
       }
-    });
+      return callback(null, 0);
+    } catch (err) {
+      return this.errorHandler('length', err, callback);
+    }
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -374,13 +355,10 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  clear(callback: (err?: any) => void) {
-    this.ready(async (error: any) => {
-      if (error) {
-        throw error;
-      }
-
-      try {
+  async clear(callback: (err?: any) => void) {
+    try {
+      const isReady = await this.dbReadyCheck();
+      if (isReady) {
         const request = (this.databaseConnection as ConnectionPool).request();
         await request.query(`
               TRUNCATE TABLE ${this.table}`);
@@ -388,11 +366,12 @@ class MSSQLStore extends ExpressSessionStore implements IMSSQLStore {
         if (callback) {
           return callback();
         }
-        return null;
-      } catch (err) {
-        return this.errorHandler('clear', err, callback);
       }
-    });
+
+      return null;
+    } catch (err) {
+      return this.errorHandler('clear', err, callback);
+    }
   }
 }
 /**

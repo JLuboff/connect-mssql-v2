@@ -53,6 +53,11 @@ export interface MSSQLStoreDef {
   length(callback: (err: any, length?: number | null) => void): void;
   clear(callback?: (err?: any) => void): void;
 }
+/**
+ * ! DEPRECATION WARNING
+ * ! This will be deprecated in v4.0 in favor of MSSQLStoreDef
+ */
+export interface IMSSQLStore extends MSSQLStoreDef {}
 type SQLDataTypes = ISqlTypeWithLength | ISqlTypeFactoryWithNoParams;
 interface QueryRunnerProps {
   inputParameters?: {
@@ -64,7 +69,7 @@ interface QueryRunnerProps {
   expectReturn: boolean;
   queryStatement: string;
 }
-class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
+class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLStore {
   table: string;
 
   ttl: number;
@@ -114,10 +119,6 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
 
       if (this.databaseConnection?.connected) {
         return true;
-      }
-
-      if (this.databaseConnection?.connecting) {
-        return this.databaseConnection.once('connect', () => 'Connecting...');
       }
 
       throw new Error('Connection is closed.');

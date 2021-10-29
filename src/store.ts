@@ -98,6 +98,11 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
     this.databaseConnection = new sql.ConnectionPool(config);
   }
 
+  // ////////////////////////////////////////////////////////////////
+  /**
+   * Initializes connection to the database and emits connect on success or error on failure
+   */
+  // ////////////////////////////////////////////////////////////////
   private async initializeDatabase() {
     // Attachs connect event listener and emits on successful connection
     this.databaseConnection.on('connect', () => this.emit('connect', this));
@@ -111,6 +116,11 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
     }
   }
 
+  // ////////////////////////////////////////////////////////////////
+  /**
+   * Verifies database connection has been established, and if not, will initialize connection
+   */
+  // ////////////////////////////////////////////////////////////////
   private async dbReadyCheck() {
     try {
       if (!this.databaseConnection.connected && !this.databaseConnection.connecting) {

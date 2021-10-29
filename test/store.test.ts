@@ -111,6 +111,31 @@ describe('connect-mssql-v2', () => {
         return done();
       });
     });
+
+    test('Should add a session than use clear method to remove', (done) => {
+      store.set('5678DEF', TESTDATA, () => {
+        store.all((err: any, session: any) => {
+          if (err) return done(err);
+
+          expect(Object.keys(session)).toHaveLength(1);
+          expect(session['5678DEF'].somevalue).toBe('yes');
+
+          store.clear((err: any) => {
+            if (err) return done(err);
+            store.all((err: any, session: any) => {
+              if (err) return done(err);
+
+              expect(session).toBeFalsy();
+              return done();
+            });
+
+            return done();
+          });
+
+          return done();
+        });
+      });
+    });
   });
 
   describe('autoRemove test suite', () => {

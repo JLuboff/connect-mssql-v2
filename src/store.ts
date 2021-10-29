@@ -111,12 +111,15 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
       if (!this.databaseConnection.connected && !this.databaseConnection.connecting) {
         await this.initializeDatabase();
       }
+
       if (this.databaseConnection?.connected) {
         return true;
       }
+
       if (this.databaseConnection?.connecting) {
         return this.databaseConnection.once('connect', () => 'Connecting...');
       }
+
       throw new Error('Connection is closed.');
     } catch (error) {
       this.databaseConnection!.emit('error', error);
@@ -166,11 +169,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
      */
     const result: IResult<T> = await request.query(queryStatement);
 
-    if (expectReturn) {
-      return result.recordset;
-    }
-
-    return null;
+    return expectReturn ? result.recordset : null;
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -186,10 +185,8 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     // eslint-disable-next-line no-shadow
     this.databaseConnection.once('sessionError', () => this.emit('sessionError', error, method));
     this.databaseConnection.emit('sessionError', error, method);
-    if (callback) {
-      return callback(error);
-    }
-    return undefined;
+
+    return callback ? callback(error) : null;
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -204,17 +201,16 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         queryStatement: `SELECT sid, session FROM ${this.table}`,
         expectReturn: true,
       });
+      const queryResultLength = queryResult?.length ?? 0;
+      const returnObject: { [sid: string]: SessionData } = {};
 
-      if (queryResult?.length) {
-        const returnObject: { [sid: string]: SessionData } = {};
-        for (let i = 0; i < queryResult.length; i += 1) {
+      if (queryResult) {
+        for (let i = 0; i < queryResultLength; i += 1) {
           returnObject[queryResult[i].sid] = JSON.parse(queryResult[i].session);
         }
-
-        return callback(null, returnObject);
       }
 
-      return callback(null, null);
+      return callback(null, queryResultLength ? returnObject : null);
     } catch (err) {
       return this.errorHandler('all', err, callback);
     }
@@ -237,11 +233,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         expectReturn: true,
       });
 
-      if (queryResult?.length) {
-        return callback(null, JSON.parse(queryResult[0].session));
-      }
-
-      return callback(null, null);
+      return callback(null, queryResult?.length ? JSON.parse(queryResult[0].session) : null);
     } catch (err) {
       return this.errorHandler('get', err, callback);
     }
@@ -275,11 +267,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         expectReturn: false,
       });
 
-      if (callback) {
-        return callback();
-      }
-
-      return null;
+      return callback ? callback() : null;
     } catch (err) {
       return this.errorHandler('set', err, callback);
     }
@@ -307,11 +295,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         expectReturn: false,
       });
 
-      if (callback) {
-        return callback();
-      }
-
-      return null;
+      return callback ? callback() : null;
     } catch (err) {
       return this.errorHandler('touch', err, callback);
     }
@@ -333,11 +317,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         expectReturn: false,
       });
 
-      if (callback) {
-        return callback();
-      }
-
-      return null;
+      return callback ? callback() : null;
     } catch (err) {
       return this.errorHandler('destroy', err, callback);
     }
@@ -360,11 +340,8 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
       if (this.autoRemoveCallback) {
         this.autoRemoveCallback();
       }
-      if (callback) {
-        return callback();
-      }
 
-      return null;
+      return callback ? callback() : null;
     } catch (err) {
       if (this.autoRemoveCallback) {
         this.autoRemoveCallback(err);
@@ -387,7 +364,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         expectReturn: true,
       });
 
-      return queryResult?.[0] ? callback(null, queryResult?.[0].length ?? 0) : callback(null, 0);
+      return callback(null, queryResult?.[0].length ?? 0);
     } catch (err) {
       return this.errorHandler('length', err, callback);
     }
@@ -406,11 +383,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         expectReturn: false,
       });
 
-      if (callback) {
-        return callback();
-      }
-
-      return null;
+      return callback ? callback() : null;
     } catch (err) {
       return this.errorHandler('clear', err, callback);
     }

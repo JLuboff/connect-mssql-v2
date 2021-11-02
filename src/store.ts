@@ -340,7 +340,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  async destroyExpired(callback: any) {
+  async destroyExpired(callback?: Function) {
     try {
       await this.queryRunner({
         queryStatement: `DELETE FROM ${this.table} 

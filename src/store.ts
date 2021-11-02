@@ -65,7 +65,7 @@ interface QueryRunnerProps {
       value: string | Date;
       dataType: SQLDataTypes;
     };
-  }[];
+  };
   expectReturn: boolean;
   queryStatement: string;
 }
@@ -171,8 +171,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
     /**
      * If any inputParamters exist, attach to request object
      */
-    inputParameters?.forEach((parameter) => {
-      const [key, { value, dataType }] = Object.entries(parameter)[0];
+    Object.entries(inputParameters ?? {}).forEach(([key, { value, dataType }]) => {
       request.input(key, dataType, value);
     });
     /**
@@ -197,9 +196,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
     this.databaseConnection.once('sessionError', () => this.emit('sessionError', error, method));
     this.databaseConnection.emit('sessionError', error, method);
 
-    if (callback) {
-      callback();
-    }
+    return callback ? callback(error) : null;
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -239,7 +236,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
   async get(sid: string, callback: (err: any, session?: SessionData | null) => void) {
     try {
       const queryResult = await this.queryRunner<{ session: string }>({
-        inputParameters: [{ sid: { value: sid, dataType: NVarChar(255) } }],
+        inputParameters: { sid: { value: sid, dataType: NVarChar(255) } },
         queryStatement: `SELECT session 
                            FROM ${this.table}
                            WHERE sid = @sid`,
@@ -264,11 +261,12 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
     try {
       const expires = this.getExpirationDate(currentSession.cookie);
       await this.queryRunner({
-        inputParameters: [
-          { sid: { value: sid, dataType: NVarChar(255) } },
-          { session: { value: JSON.stringify(currentSession), dataType: NVarChar(MAX) } },
-          { expires: { value: expires, dataType: DateTime } },
-        ],
+        inputParameters:
+          {
+            sid: { value: sid, dataType: NVarChar(255) },
+            session: { value: JSON.stringify(currentSession), dataType: NVarChar(MAX) },
+            expires: { value: expires, dataType: DateTime },
+          },
         queryStatement: `UPDATE ${this.table} 
                            SET session = @session, expires = @expires 
                            WHERE sid = @sid;
@@ -300,10 +298,11 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
     try {
       const expires = this.getExpirationDate(currentSession.cookie);
       await this.queryRunner({
-        inputParameters: [
-          { sid: { value: sid, dataType: NVarChar(255) } },
-          { expires: { value: expires, dataType: DateTime } },
-        ],
+        inputParameters:
+          {
+            sid: { value: sid, dataType: NVarChar(255) },
+            expires: { value: expires, dataType: DateTime },
+          },
         queryStatement: `UPDATE ${this.table} 
                            SET expires = @expires 
                            WHERE sid = @sid`,
@@ -328,7 +327,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
   async destroy(sid: string, callback?: (err?: any) => void) {
     try {
       await this.queryRunner({
-        inputParameters: [{ sid: { value: sid, dataType: NVarChar(255) } }],
+        inputParameters: { sid: { value: sid, dataType: NVarChar(255) } },
         queryStatement: `DELETE FROM ${this.table} 
                            WHERE sid = @sid`,
         expectReturn: false,

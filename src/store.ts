@@ -44,14 +44,14 @@ export interface MSSQLStoreDef {
   config: SQLConfig;
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
-  all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void): void;
-  get(sid: string, callback: (err: any, session?: SessionData | null) => void): void;
-  set(sid: string, currentSession: SessionData, callback?: (err?: any) => void): void;
-  touch(sid: string, currentSession: SessionData, callback?: (err?: any) => void): void;
-  destroy(sid: string, callback?: (err?: any) => void): void;
-  destroyExpired(callback?: Function): void;
-  length(callback: (err: any, length?: number | null) => void): void;
-  clear(callback?: (err?: any) => void): void;
+  all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void): Promise<void>;
+  get(sid: string, callback: (err: any, session?: SessionData | null) => void): Promise<void>;
+  set(sid: string, currentSession: SessionData, callback?: (err?: any) => void): Promise<void>;
+  touch(sid: string, currentSession: SessionData, callback?: (err?: any) => void): Promise<void>;
+  destroy(sid: string, callback?: (err?: any) => void): Promise<void>;
+  destroyExpired(callback?: Function): Promise<void>;
+  length(callback: (err: any, length?: number | null) => void): Promise<void>;
+  clear(callback?: (err?: any) => void): Promise<void>;
 }
 /**
  * ! DEPRECATION WARNING
@@ -197,7 +197,9 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
     this.databaseConnection.once('sessionError', () => this.emit('sessionError', error, method));
     this.databaseConnection.emit('sessionError', error, method);
 
-    return callback ? callback(error) : null;
+    if (callback) {
+      callback();
+    }
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -221,9 +223,9 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
         }
       }
 
-      return callback(null, queryResultLength ? returnObject : null);
+      callback(null, queryResultLength ? returnObject : null);
     } catch (err) {
-      return this.errorHandler('all', err, callback);
+      this.errorHandler('all', err, callback);
     }
   }
 
@@ -244,9 +246,9 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
         expectReturn: true,
       });
 
-      return callback(null, queryResult?.length ? JSON.parse(queryResult[0].session) : null);
+      callback(null, queryResult?.length ? JSON.parse(queryResult[0].session) : null);
     } catch (err) {
-      return this.errorHandler('get', err, callback);
+      this.errorHandler('get', err, callback);
     }
   }
 
@@ -278,9 +280,11 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
         expectReturn: false,
       });
 
-      return callback ? callback() : null;
+      if (callback) {
+        callback();
+      }
     } catch (err) {
-      return this.errorHandler('set', err, callback);
+      this.errorHandler('set', err, callback);
     }
   }
 
@@ -306,9 +310,11 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
         expectReturn: false,
       });
 
-      return callback ? callback() : null;
+      if (callback) {
+        callback();
+      }
     } catch (err) {
-      return this.errorHandler('touch', err, callback);
+      this.errorHandler('touch', err, callback);
     }
   }
 
@@ -328,9 +334,11 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
         expectReturn: false,
       });
 
-      return callback ? callback() : null;
+      if (callback) {
+        callback();
+      }
     } catch (err) {
-      return this.errorHandler('destroy', err, callback);
+      this.errorHandler('destroy', err, callback);
     }
   }
 
@@ -352,12 +360,14 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
         this.autoRemoveCallback();
       }
 
-      return callback ? callback() : null;
+      if (callback) {
+        callback();
+      }
     } catch (err) {
       if (this.autoRemoveCallback) {
         this.autoRemoveCallback(err);
       }
-      return this.errorHandler('destroyExpired', err, callback);
+      this.errorHandler('destroyExpired', err, callback);
     }
   }
 
@@ -375,9 +385,9 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
         expectReturn: true,
       });
 
-      return callback(null, queryResult?.[0].length ?? 0);
+      callback(null, queryResult?.[0].length ?? 0);
     } catch (err) {
-      return this.errorHandler('length', err, callback);
+      this.errorHandler('length', err, callback);
     }
   }
 
@@ -394,9 +404,11 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
         expectReturn: false,
       });
 
-      return callback ? callback() : null;
+      if (callback) {
+        callback();
+      }
     } catch (err) {
-      return this.errorHandler('clear', err, callback);
+      this.errorHandler('clear', err, callback);
     }
   }
 }

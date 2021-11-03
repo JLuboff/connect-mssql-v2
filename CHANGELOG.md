@@ -2,6 +2,22 @@
 
 All project updates will be documented in this file
 
+## [v3.1.0] - 2021-11-03
+- PR #52 closed (Refactor)
+  - Replaced private `ready` method with private `dbReadyCheck` method. 
+    -`dbReadyCheck` is an async method as opposed to using a callback
+    - Moved all DB checks from within each method to our new method `queryRunner`
+  - Created private `queryRunner` method
+    - Each method requiring database querying will be ran through this method
+  - Made store methods `async`
+    - Removed unneeded `return` as we are no longer working within a callback
+  - Corrected typings for `destroyExpired` method
+  - Wrote test for `clear` method
+  - Renamed `IMSSQLStore` interface to `MSSQLStoreDef`
+    - Changed `IMSSQLStore` to extend `MSSQLStoreDef` and added deprecation warning
+  - Changed argument name from `session` to `currentSession` for `set` and `touch` methods due to importing `session` namespace
+  - Ran `npm audit fix` which resolves 2 vulnerabilities with `axios`
+  
 ## [v3.0.1] - 2021-10-28
 - Updated packages to current version
   - @types/jest                       ^26.0.20  →  ^27.0.2

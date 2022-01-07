@@ -2,6 +2,23 @@
 
 All project updates will be documented in this file
 
+## [v3.1.1] - 2022-01-07
+- Turned off ESLint rule: "import/no-import-module-exports"
+- Added coverage folder to tsconfig exlcude 
+- Updated packages to current version
+  - @types/jest                       ^27.0.2  →  ^27.4.0
+  - @typescript-eslint/eslint-plugin   ^5.2.0  →   ^5.9.0
+  - @typescript-eslint/parser          ^5.2.0  →   ^5.9.0
+  - eslint                             ^8.1.0  →   ^8.6.0
+  - eslint-config-airbnb-base         ^14.2.1  →  ^15.0.0
+  - eslint-config-airbnb-typescript   ^14.0.1  →  ^16.1.0
+  - eslint-plugin-import              ^2.25.2  →  ^2.25.4
+  - jest                              ^27.3.1  →  ^27.4.7
+  - lint-staged                       ^11.2.6  →  ^12.1.7
+  - prettier                           ^2.4.1  →   ^2.5.1
+  - typescript                         ^4.4.4  →   ^4.5.4
+  - mssql                              ^7.2.1  →   ^7.3.0
+
 ## [v3.1.0] - 2021-11-03
 - PR #52 closed (Refactor)
   - Replaced private `ready` method with private `dbReadyCheck` method. 

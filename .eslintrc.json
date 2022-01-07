@@ -9,6 +9,7 @@
   },
   "rules": {
     "import/no-extraneous-dependencies" : "off",
-    "@typescript-eslint/no-redeclare": "off"
+    "@typescript-eslint/no-redeclare": "off",
+    "import/no-import-module-exports": "off"
   }
 }

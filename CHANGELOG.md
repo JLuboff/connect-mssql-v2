@@ -2,6 +2,22 @@
 
 All project updates will be documented in this file
 
+## [v3.1.2] - 2022-03-18
+- Updated packages to current version
+  - @types/jest                       ^27.4.0  →  ^27.4.1
+  - @types/mssql                       ^7.1.4  →   ^7.1.5
+  - @typescript-eslint/eslint-plugin   ^5.9.0  →  ^5.15.0
+  - @typescript-eslint/parser          ^5.9.0  →  ^5.15.0
+  - dotenv                            ^10.0.0  →  ^16.0.0
+  - eslint                             ^8.6.0  →  ^8.11.0
+  - eslint-config-airbnb-typescript   ^16.1.0  →  ^16.1.3
+  - jest                              ^27.4.7  →  ^27.5.1
+  - lint-staged                       ^12.1.7  →  ^12.3.7
+  - prettier                           ^2.5.1  →   ^2.6.0
+  - ts-node                           ^10.4.0  →  ^10.7.0
+  - typescript                         ^4.5.4  →   ^4.6.2
+  - mssql                              ^7.3.0  →   ^8.0.2
+
 ## [v3.1.1] - 2022-01-07
 - Turned off ESLint rule: "import/no-import-module-exports"
 - Added coverage folder to tsconfig exlcude 

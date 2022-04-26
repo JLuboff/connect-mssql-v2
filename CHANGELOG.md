@@ -2,6 +2,20 @@
 
 All project updates will be documented in this file
 
+## [v3.1.3] - 2022-04-25
+- Updated packages to current version
+  - @typescript-eslint/eslint-plugin  ^5.15.0  →  ^5.21.0     
+  - @typescript-eslint/parser         ^5.15.0  →  ^5.21.0     
+  - eslint                            ^8.11.0  →  ^8.14.0     
+  - eslint-config-airbnb-typescript   ^16.1.3  →  ^17.0.0     
+  - eslint-plugin-import              ^2.25.4  →  ^2.26.0     
+  - jest                              ^27.5.1  →  ^28.0.1     
+  - lint-staged                       ^12.3.7  →  ^12.4.1     
+  - prettier                           ^2.6.0  →   ^2.6.2     
+  - typescript                         ^4.6.2  →   ^4.6.3     
+  - mssql                              ^8.0.2  →   ^8.1.0 
+- Added `jest-jasmine2` as a dev dependency as it is no longer included with `jest` (update from v27 to v28)
+
 ## [v3.1.2] - 2022-03-18
 - Updated packages to current version
   - @types/jest                       ^27.4.0  →  ^27.4.1

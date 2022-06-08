@@ -11,7 +11,7 @@ RUN sudo apt-get update \
 # installation steps
 # taken from (example uses redhat):
 # https://docs.microsoft.com/en-us/sql/linux/sample-unattended-install-redhat?view=sql-server-ver16
-# RUN sudo service mssql-server start
+# RUN sudo systemctl start mssql-server
 # RUN sudo MSSQL_SA_PASSWORD=Password1! \
 #   MSSQL_PID=express \
 #   /opt/mssql/bin/mssql-conf -n setup accept-eula

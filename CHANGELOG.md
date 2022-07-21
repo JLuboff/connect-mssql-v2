@@ -2,6 +2,25 @@
 
 All project updates will be documented in this file
 
+## [v3.1.4] - 2022-07-21
+- Updated packages to current version
+  - mssql                              ^8.1.0  →   ^8.1.2
+  - @types/express-session            ^1.17.4  →  ^1.17.5
+  - @types/jest                       ^27.4.1  →  ^28.1.6
+  - @types/mssql                       ^7.1.5  →   ^8.0.3
+  - @typescript-eslint/eslint-plugin  ^5.21.0  →  ^5.30.7
+  - @typescript-eslint/parser         ^5.21.0  →  ^5.30.7
+  - dotenv                            ^16.0.0  →  ^16.0.1
+  - eslint                            ^8.14.0  →  ^8.20.0
+  - express-session                   ^1.17.2  →  ^1.17.3
+  - husky                              ^7.0.4  →   ^8.0.1
+  - jest                              ^28.0.1  →  ^28.1.3
+  - jest-jasmine2                     ^28.0.1  →  ^28.1.3
+  - lint-staged                       ^12.4.1  →  ^13.0.3
+  - prettier                           ^2.6.2  →   ^2.7.1
+  - ts-node                           ^10.7.0  →  ^10.9.1
+  - typescript                         ^4.6.3  →   ^4.7.4
+  
 ## [v3.1.3] - 2022-04-25
 - Updated packages to current version
   - @typescript-eslint/eslint-plugin  ^5.15.0  →  ^5.21.0     

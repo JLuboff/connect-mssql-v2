@@ -124,6 +124,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
   private async dbReadyCheck() {
     try {
       if (!this.databaseConnection.connected && !this.databaseConnection.connecting) {
+        await new Promise((r) => setTimeout(r, 5));
         await this.initializeDatabase();
       }
 

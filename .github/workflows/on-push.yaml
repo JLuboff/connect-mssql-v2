@@ -24,4 +24,11 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run lint
+      - name: Install a SQL Server suite of tools
+        uses: potatoqualitee/mssqlsuite@v1.5.1`
+        with:
+          install: sqlengine
       - run: npm run test
+        env:
+          SQLUSER: sa
+          SQLPASSWORD: dbatools.I0

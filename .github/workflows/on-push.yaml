@@ -28,6 +28,13 @@ jobs:
         uses: potatoqualitee/mssqlsuite@v1.5.1
         with:
           install: sqlengine
+      - name: Seed session table
+        run: |
+          sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "CREATE TABLE [dbo].[sessions](
+              [sid] [nvarchar](255) NOT NULL PRIMARY KEY,
+              [session] [nvarchar](max) NOT NULL,
+              [expires] [datetime] NOT NULL
+          )"
       - run: npm run test
         env:
           SQLUSER: sa

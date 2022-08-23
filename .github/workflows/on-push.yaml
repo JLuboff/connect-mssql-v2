@@ -39,3 +39,5 @@ jobs:
         env:
           SQLUSER: sa
           SQLPASSWORD: dbatools.I0
+          SQLSERVER: localhost
+          SQLDATABASE: tempdb

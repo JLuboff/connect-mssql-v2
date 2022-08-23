@@ -32,7 +32,6 @@
     "mssql": "^8.1.2"
   },
   "devDependencies": {
-    "@types/dotenv": "^8.2.0",
     "@types/express-session": "^1.17.5",
     "@types/jest": "^28.1.6",
     "@types/mssql": "^8.0.3",

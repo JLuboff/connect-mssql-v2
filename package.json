@@ -7,7 +7,7 @@
   "scripts": {
     "prepublishOnly": "npm run clean && npm run build",
     "build": "npx tsc",
-    "test": "jest --watch ./dist/test",
+    "test": "jest ./dist/test",
     "lint": "npx eslint src --ext .ts",
     "clean": "npx rimraf dist"
   },

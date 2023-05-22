@@ -212,7 +212,6 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         queryStatement: `SELECT sid, session FROM ${this.table}`,
         expectReturn: true,
       });
-      const queryResultLength = queryResult?.length ?? 0;
       const returnObject: { [sid: string]: SessionData } = {};
 
       if (queryResult) {
@@ -221,7 +220,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         });
       }
 
-      callback(null, queryResultLength ? returnObject : null);
+      callback(null, queryResult?.length ? returnObject : null);
     } catch (err) {
       this.errorHandler('all', err, callback);
     }

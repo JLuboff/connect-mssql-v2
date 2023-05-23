@@ -44,32 +44,33 @@ export interface MSSQLStoreDef {
   config: SQLConfig;
   options?: StoreOptions;
   databaseConnection: ConnectionPool | null;
-  all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void): Promise<void>;
-  get(sid: string, callback: (err: any, session?: SessionData | null) => void): Promise<void>;
-  set(sid: string, currentSession: SessionData, callback?: (err?: any) => void): Promise<void>;
-  touch(sid: string, currentSession: SessionData, callback?: (err?: any) => void): Promise<void>;
-  destroy(sid: string, callback?: (err?: any) => void): Promise<void>;
+  all(
+    callback: (err: unknown, session?: { [sid: string]: SessionData } | null) => void,
+  ): Promise<void>;
+  get(sid: string, callback: (err: unknown, session?: SessionData | null) => void): Promise<void>;
+  set(sid: string, currentSession: SessionData, callback?: (err?: unknown) => void): Promise<void>;
+  touch(
+    sid: string,
+    currentSession: SessionData,
+    callback?: (err?: unknown) => void,
+  ): Promise<void>;
+  destroy(sid: string, callback?: (err?: unknown) => void): Promise<void>;
   destroyExpired(callback?: Function): Promise<void>;
-  length(callback: (err: any, length?: number | null) => void): Promise<void>;
-  clear(callback?: (err?: any) => void): Promise<void>;
+  length(callback: (err: unknown, length?: number | null) => void): Promise<void>;
+  clear(callback?: (err?: unknown) => void): Promise<void>;
 }
-/**
- * ! DEPRECATION WARNING
- * ! This will be deprecated in v4.0 in favor of MSSQLStoreDef
- */
-export interface IMSSQLStore extends MSSQLStoreDef {}
+
 type SQLDataTypes = ISqlTypeWithLength | ISqlTypeFactoryWithNoParams;
+interface InputParameter {
+  value: string | Date;
+  dataType: SQLDataTypes;
+}
 interface QueryRunnerProps {
-  inputParameters?: {
-    [key: string]: {
-      value: string | Date;
-      dataType: SQLDataTypes;
-    };
-  };
+  inputParameters?: Record<string, InputParameter>;
   expectReturn: boolean;
   queryStatement: string;
 }
-class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLStore {
+class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   table: string;
 
   ttl: number;
@@ -191,7 +192,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
    * @param callback
    */
   // ////////////////////////////////////////////////////////////////
-  errorHandler(method: keyof MSSQLStoreDef, error: any, callback?: any) {
+  errorHandler(method: keyof MSSQLStoreDef, error: unknown, callback?: any) {
     // eslint-disable-next-line no-shadow
     this.databaseConnection.once('sessionError', () => this.emit('sessionError', error, method));
     this.databaseConnection.emit('sessionError', error, method);
@@ -205,22 +206,21 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  async all(callback: (err: any, session?: { [sid: string]: SessionData } | null) => void) {
+  async all(callback: (err: unknown, session?: { [sid: string]: SessionData } | null) => void) {
     try {
       const queryResult = await this.queryRunner<{ sid: string; session: string }>({
         queryStatement: `SELECT sid, session FROM ${this.table}`,
         expectReturn: true,
       });
-      const queryResultLength = queryResult?.length ?? 0;
       const returnObject: { [sid: string]: SessionData } = {};
 
       if (queryResult) {
-        for (let i = 0; i < queryResultLength; i += 1) {
-          returnObject[queryResult[i].sid] = JSON.parse(queryResult[i].session);
-        }
+        queryResult.forEach(({ sid, session: sessionValue }) => {
+          returnObject[sid] = JSON.parse(sessionValue);
+        });
       }
 
-      callback(null, queryResultLength ? returnObject : null);
+      callback(null, queryResult?.length ? returnObject : null);
     } catch (err) {
       this.errorHandler('all', err, callback);
     }
@@ -233,7 +233,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  async get(sid: string, callback: (err: any, session?: SessionData | null) => void) {
+  async get(sid: string, callback: (err: unknown, session?: SessionData | null) => void) {
     try {
       const queryResult = await this.queryRunner<{ session: string }>({
         inputParameters: { sid: { value: sid, dataType: NVarChar(255) } },
@@ -257,16 +257,15 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  async set(sid: string, currentSession: SessionData, callback?: (err?: any) => void) {
+  async set(sid: string, currentSession: SessionData, callback?: (err?: unknown) => void) {
     try {
       const expires = this.getExpirationDate(currentSession.cookie);
       await this.queryRunner({
-        inputParameters:
-          {
-            sid: { value: sid, dataType: NVarChar(255) },
-            session: { value: JSON.stringify(currentSession), dataType: NVarChar(MAX) },
-            expires: { value: expires, dataType: DateTime },
-          },
+        inputParameters: {
+          sid: { value: sid, dataType: NVarChar(255) },
+          session: { value: JSON.stringify(currentSession), dataType: NVarChar(MAX) },
+          expires: { value: expires, dataType: DateTime },
+        },
         queryStatement: `UPDATE ${this.table} 
                            SET session = @session, expires = @expires 
                            WHERE sid = @sid;
@@ -294,15 +293,14 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  async touch(sid: string, currentSession: SessionData, callback: (err?: any) => void) {
+  async touch(sid: string, currentSession: SessionData, callback: (err?: unknown) => void) {
     try {
       const expires = this.getExpirationDate(currentSession.cookie);
       await this.queryRunner({
-        inputParameters:
-          {
-            sid: { value: sid, dataType: NVarChar(255) },
-            expires: { value: expires, dataType: DateTime },
-          },
+        inputParameters: {
+          sid: { value: sid, dataType: NVarChar(255) },
+          expires: { value: expires, dataType: DateTime },
+        },
         queryStatement: `UPDATE ${this.table} 
                            SET expires = @expires 
                            WHERE sid = @sid`,
@@ -324,7 +322,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  async destroy(sid: string, callback?: (err?: any) => void) {
+  async destroy(sid: string, callback?: (err?: unknown) => void) {
     try {
       await this.queryRunner({
         inputParameters: { sid: { value: sid, dataType: NVarChar(255) } },
@@ -376,7 +374,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  async length(callback: (err: any, length: number) => void) {
+  async length(callback: (err: unknown, length: number) => void) {
     try {
       const queryResult = await this.queryRunner<{ length: number }>({
         queryStatement: `SELECT COUNT(sid) AS length
@@ -396,7 +394,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef, IMSSQLSto
    * @param callback
    */
   // //////////////////////////////////////////////////////////////
-  async clear(callback: (err?: any) => void) {
+  async clear(callback: (err?: unknown) => void) {
     try {
       await this.queryRunner({
         queryStatement: `TRUNCATE TABLE ${this.table}`,

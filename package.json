@@ -56,7 +56,7 @@
     "dist/src/store.d.ts"
   ],
   "lint-staged": {
-    "src/**/*.{js,ts,jsx,tsx}": [
+    "src/**/*.{js,ts}": [
       "eslint --cache --fix",
       "prettier --write"
     ]

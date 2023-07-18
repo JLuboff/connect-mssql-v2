@@ -6,3 +6,4 @@ dist
 */test.ts
 *server.test.ts
 coverage
+.DS_Store

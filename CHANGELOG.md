@@ -2,20 +2,38 @@
 
 All project updates will be documented in this file
 
+## [v4.0.2] - 2023-08-29
+
+- Updated packages to current versions
+  - @types/jest ^29.5.3 → ^29.5.4
+  - @typescript-eslint/eslint-plugin ^6.1.0 → ^6.5.0
+  - @typescript-eslint/parser ^6.1.0 → ^6.5.0
+  - eslint ^8.45.0 → ^8.48.0
+  - eslint-plugin-import ^2.27.5 → ^2.28.1
+  - husky ^8.0.0 → ^8.0.3
+  - jest ^29.6.1 → ^29.6.4
+  - jest-jasmine2 ^29.6.1 → ^29.6.4
+  - lint-staged ^13.2.3 → ^14.0.1
+  - mssql ^9.1.1 → ^9.2.0
+  - prettier ^3.0.0 → ^3.0.3
+  - typescript ^5.1.6 → ^5.2.2
+
 ## [v4.0.1] - 2023-07-18
+
 - Updated lint-staged to include linting
 - Updated packages to current versions
-  - @types/jest                       ^29.5.1  →  ^29.5.3
-  - @typescript-eslint/eslint-plugin  ^5.59.6  →   ^6.1.0
-  - @typescript-eslint/parser         ^5.59.6  →   ^6.1.0
-  - dotenv                            ^16.0.3  →  ^16.3.1
-  - eslint                            ^8.40.0  →  ^8.45.0
-  - eslint-config-airbnb-typescript   ^17.0.0  →  ^17.1.0
-  - jest                              ^29.5.0  →  ^29.6.1
-  - jest-jasmine2                     ^29.5.0  →  ^29.6.1
-  - lint-staged                       ^13.2.2  →  ^13.2.3
-  - prettier                           ^2.8.8  →   ^3.0.0
-  - typescript                         ^5.0.4  →   ^5.1.6
+  - @types/jest ^29.5.1 → ^29.5.3
+  - @typescript-eslint/eslint-plugin ^5.59.6 → ^6.1.0
+  - @typescript-eslint/parser ^5.59.6 → ^6.1.0
+  - dotenv ^16.0.3 → ^16.3.1
+  - eslint ^8.40.0 → ^8.45.0
+  - eslint-config-airbnb-typescript ^17.0.0 → ^17.1.0
+  - jest ^29.5.0 → ^29.6.1
+  - jest-jasmine2 ^29.5.0 → ^29.6.1
+  - lint-staged ^13.2.2 → ^13.2.3
+  - prettier ^2.8.8 → ^3.0.0
+  - typescript ^5.0.4 → ^5.1.6
+
 ## [v4.0.0] - 2023-05-18
 
 - Potential breaking changes

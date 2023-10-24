@@ -26,7 +26,9 @@ CREATE TABLE [dbo].[sessions](
 ```
 
 ## Usage
+
 Javascript
+
 ```javascript
 const MSSQLStore = require('connect-mssql-v2');
 
@@ -37,19 +39,20 @@ const config = {
   database: '...',
   options: {
     encrypt: true, // Use this if you're on Windows Azure
-    trustServerCertificate: true // use this if your MS SQL instance uses a self signed certificate
-
-  }
+    trustServerCertificate: true, // use this if your MS SQL instance uses a self signed certificate
+  },
 };
 
 app.use(
   session({
     store: new MSSQLStore(config, options), // options are optional
-    secret: 'supersecret'
-  })
+    secret: 'supersecret',
+  }),
 );
 ```
+
 Typescript
+
 ```typescript
 import MSSQLStore from 'connect-mssql-v2';
 
@@ -60,18 +63,18 @@ const config = {
   database: '...',
   options: {
     encrypt: true, // Use this if you're on Windows Azure
-    trustServerCertificate: true // use this if your MS SQL instance uses a self signed certificate
-
-  }
+    trustServerCertificate: true, // use this if your MS SQL instance uses a self signed certificate
+  },
 };
 
 app.use(
   session({
     store: new MSSQLStore(config, options), // options are optional
-    secret: 'supersecret'
-  })
+    secret: 'supersecret',
+  }),
 );
 ```
+
 ### Options
 
 - **options.table** - Table to use as session store. Default: `[sessions]`
@@ -108,25 +111,38 @@ app.use(session({
 
 To see all options please visit [node-mssql docs](https://github.com/tediousjs/node-mssql#general-same-for-all-drivers).
 
+## Upgrading from v4.x.x to v5.x.x
+
+Ensure you're running Node >=v15
+
+## Upgrading from v3.x.x to v4.x.x
+
+Ensure you're running Node >=v13
+
 ## Upgrading from v2.x.x to v3.x.x
 
-The key step to upgrading is to include 
+The key step to upgrading is to include
+
 ```typescript
-trustServerCertificate: true 
+trustServerCertificate: true;
 ```
+
 in your options object for the store config (see either javascript or typescript example) if running a local instance of MS SQL with a self signed certificate. If you do not provide this, you will get a connection error
+
 ```
 ConnectionError: Failed to connect to databaseserver:1433 - self signed certificate
 ```
 
 ## Upgrading from v1.x.x to v2.x.x
 
-It is no longer required to pass in the `express-session` store. Please see the Usage section on the updated import/require method. 
+It is no longer required to pass in the `express-session` store. Please see the Usage section on the updated import/require method.
 
 ## Contributions
+
 Contributions are welcome, please submit a PR which will be reviewed.
 
 ## Reporting Issues
+
 Please report issues/errors to Github's issue tracker: [connect-mssql-v2 issue tracker](https://github.com/JLuboff/connect-mssql-v2/issues).
 Include issue, expected behavior, and how to replicate the issue.
 

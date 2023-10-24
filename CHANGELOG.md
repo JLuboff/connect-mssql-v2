@@ -2,6 +2,23 @@
 
 All project updates will be documented in this file
 
+## [v5.0.0] - 2023-10-23
+
+- Drops support for Node <=v14 due to `mssql@10.0.1`
+- lint-staged updated to latest version, requires Node v18.12.0 (only affects dev)
+- Updated packages to current versions
+  - @types/express-session ^1.17.7 → ^1.17.9
+  - @types/jest ^29.5.4 → ^29.5.6
+  - @types/mssql ^8.1.2 → ^9.1.2
+  - @typescript-eslint/eslint-plugin ^6.8.0 → ^6.9.0
+  - @typescript-eslint/parser ^6.8.0 → ^6.9.0
+  - eslint ^8.51.0 → ^8.52.0
+  - eslint-plugin-import ^2.28.1 → ^2.29.0
+  - jest ^29.6.4 → ^29.7.0
+  - jest-jasmine2 ^29.6.4 → ^29.7.0
+  - lint-staged ^14.0.1 → ^15.0.2
+  - mssql ^9.2.0 → ^10.0.1
+
 ## [v4.0.2] - 2023-08-29
 
 - Updated packages to current versions

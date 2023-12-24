@@ -2,6 +2,21 @@
 
 All project updates will be documented in this file
 
+## [v5.0.1] - 2023-12-23
+
+- Updated packages to current versions
+  - @types/express-session ^1.17.9 → ^1.17.10
+  - @types/jest ^29.5.6 → ^29.5.11
+  - @types/mssql ^9.1.2 → ^9.1.4
+  - @typescript-eslint/eslint-plugin ^6.9.0 → ^6.15.0
+  - @typescript-eslint/parser ^6.9.0 → ^6.15.0
+  - eslint ^8.52.0 → ^8.56.0
+  - eslint-plugin-import ^2.29.0 → ^2.29.1
+  - lint-staged ^15.0.2 → ^15.2.0
+  - prettier ^3.0.3 → ^3.1.1
+  - ts-node ^10.9.1 → ^10.9.2
+  - typescript ^5.2.2 → ^5.3.3
+
 ## [v5.0.0] - 2023-10-23
 
 - Drops support for Node <=v14 due to `mssql@10.0.1`

@@ -21,9 +21,9 @@ export interface StoreOptions {
    */
   ttl?: number;
   /**
-   * Determines if expired sessions should be autoremoved or not.
+   * Determines if expired sessions should be auto-removed or not.
    * If value is `true` then a new function, `destroyExpired()`,
-   * will autodelete expired sessions on a set interval. Default: `false`
+   * will auto-delete expired sessions on a set interval. Default: `false`
    */
   autoRemove?: boolean;
   /**
@@ -31,6 +31,11 @@ export interface StoreOptions {
    * Default: `1000 * 60 * 10` (10 min)
    */
   autoRemoveInterval?: number;
+  /**
+   * Callback function that is called before a session is removed.
+   * Can return a promise that will be awaited before continuing.
+   */
+  preRemoveCallback?: () => Promise<any>;
   /**
    * Is the callback function for `destroyExpired()`. Default: `undefined`
    */
@@ -79,6 +84,8 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
 
   autoRemoveInterval: number;
 
+  preRemoveCallback?: (props?: any) => Promise<any>;
+
   autoRemoveCallback?: (props?: any) => any;
 
   useUTC: boolean;
@@ -93,6 +100,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     this.ttl = options?.ttl || 1000 * 60 * 60 * 24;
     this.autoRemove = options?.autoRemove || false;
     this.autoRemoveInterval = options?.autoRemoveInterval || 1000 * 60 * 10;
+    this.preRemoveCallback = options?.preRemoveCallback || undefined;
     this.autoRemoveCallback = options?.autoRemoveCallback || undefined;
     this.useUTC = options?.useUTC || true;
     this.config = config;
@@ -342,11 +350,25 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   // ////////////////////////////////////////////////////////////////
   /**
    * Destroy expired sessions
-   * @param callback
+   * @param removeCallback
    */
   // //////////////////////////////////////////////////////////////
-  async destroyExpired(callback?: Function) {
+  async destroyExpired(removeCallback?: Function, preRemoveCallback?: Function) {
     try {
+      if (this.preRemoveCallback) {
+        const $preRemoveValue = this.preRemoveCallback();
+        if ($preRemoveValue instanceof Promise) {
+          await $preRemoveValue;
+        }
+      }
+
+      if (preRemoveCallback) {
+        const $preRemoveValue = preRemoveCallback();
+        if ($preRemoveValue instanceof Promise) {
+          await $preRemoveValue;
+        }
+      }
+
       await this.queryRunner({
         queryStatement: `DELETE FROM ${this.table} 
                            WHERE expires <= GET${this.useUTC ? 'UTC' : ''}DATE()`,
@@ -357,14 +379,14 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         this.autoRemoveCallback();
       }
 
-      if (callback) {
-        callback();
+      if (removeCallback) {
+        removeCallback();
       }
     } catch (err) {
       if (this.autoRemoveCallback) {
         this.autoRemoveCallback(err);
       }
-      this.errorHandler('destroyExpired', err, callback);
+      this.errorHandler('destroyExpired', err, removeCallback);
     }
   }
 

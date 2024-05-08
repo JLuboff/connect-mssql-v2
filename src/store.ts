@@ -84,7 +84,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
 
   autoRemoveInterval: number;
 
-  preRemoveCallback?: (props?: any) => Promise<any>;
+  preRemoveCallback?: (props?: any) => Promise<any> | any;
 
   autoRemoveCallback?: (props?: any) => any;
 

@@ -113,9 +113,9 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
    */
   // ////////////////////////////////////////////////////////////////
   private async initializeDatabase() {
-    // Attachs connect event listener and emits on successful connection
+    // Attaches connect event listener and emits on successful connection
     this.databaseConnection.on('connect', () => this.emit('connect', this));
-    // Attachs error event listener and emits on failed connection
+    // Attaches error event listener and emits on failed connection
     this.databaseConnection.on('error', (error) => this.emit('error', error));
 
     await this.databaseConnection.connect();
@@ -175,10 +175,11 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     if (!isReady) {
       throw new Error('Database connection is closed');
     }
+    // TODO: might not actually need await?
     const request = await this.databaseConnection.request();
     const { inputParameters, expectReturn, queryStatement } = props;
     /**
-     * If any inputParamters exist, attach to request object
+     * If any inputParameters exist, attach to request object
      */
     Object.entries(inputParameters ?? {}).forEach(([key, { value, dataType }]) => {
       request.input(key, dataType, value);
@@ -193,8 +194,8 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
 
   // ////////////////////////////////////////////////////////////////
   /**
-   * Attachs sessionError event listener and emits on error on any
-   * store error and includes method where error occured
+   * Attaches sessionError event listener and emits on error on any
+   * store error and includes method where error occurred
    * @param method
    * @param error
    * @param callback
@@ -350,7 +351,9 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   // ////////////////////////////////////////////////////////////////
   /**
    * Destroy expired sessions
-   * @param removeCallback
+   * @param removeCallback function called after the removal occurs
+   * @param preRemoveCallback function called before removing expired sessions, will wait
+   *  if returns a promise
    */
   // //////////////////////////////////////////////////////////////
   async destroyExpired(removeCallback?: Function, preRemoveCallback?: Function) {

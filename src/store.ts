@@ -352,21 +352,12 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   /**
    * Destroy expired sessions
    * @param removeCallback function called after the removal occurs
-   * @param preRemoveCallback function called before removing expired sessions, will wait
-   *  if returns a promise
    */
   // //////////////////////////////////////////////////////////////
-  async destroyExpired(removeCallback?: Function, preRemoveCallback?: Function) {
+  async destroyExpired(removeCallback?: Function) {
     try {
       if (this.preRemoveCallback) {
         const $preRemoveValue = this.preRemoveCallback();
-        if ($preRemoveValue instanceof Promise) {
-          await $preRemoveValue;
-        }
-      }
-
-      if (preRemoveCallback) {
-        const $preRemoveValue = preRemoveCallback();
         if ($preRemoveValue instanceof Promise) {
           await $preRemoveValue;
         }

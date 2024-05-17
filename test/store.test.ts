@@ -139,17 +139,16 @@ describe('connect-mssql-v2', () => {
   });
 
   describe('autoRemove test suite', () => {
-    let cbed = false;
-    const cb = () => {
-      cbed = true;
-    };
-    const store = new MSSQLStore(sqlConfig, {
-      table: 'Sessions',
-      autoRemove: true,
-      autoRemoveCallback: cb,
-    });
-
     test('Should destroy all sessions', (done) => {
+      let cbed = false;
+      const cb = () => {
+        cbed = true;
+      };
+      const store = new MSSQLStore(sqlConfig, {
+        table: 'Sessions',
+        autoRemove: true,
+        autoRemoveCallback: cb,
+      });
       /* eslint-disable no-shadow */
       setTimeout(() => {
         store.set(
@@ -206,6 +205,63 @@ describe('connect-mssql-v2', () => {
         );
       }, 1000);
       /* eslint-enable no-shadow */
+    });
+
+    test('should call preRemoveCallback before destroying a session', async () => {
+      const autoRemoveCallback = jest.fn();
+      const preRemoveCallback = jest.fn();
+      const store = new MSSQLStore(sqlConfig, {
+        table: 'Sessions',
+        autoRemove: true,
+        preRemoveCallback,
+        autoRemoveCallback,
+      });
+      // delay execution for 1 second, just like the previous test.
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+      });
+
+      await store.set('a', {
+        cookie: {
+          expires: new Date(Date.now() - 60000),
+          originalMaxAge: 1000,
+        },
+      });
+      await store.set('b', {
+        cookie: {
+          expires: new Date(Date.now() - 60000),
+          originalMaxAge: 1000,
+        },
+      });
+
+      // this returns a promise, but not the length
+      const length = await new Promise((resolve, reject) => {
+        store.length((err: unknown, length: number) => {
+          if (err) return reject(err);
+          return resolve(length);
+        });
+      });
+
+      expect(length).toBe(2);
+
+      await new Promise<void>((resolve, reject) => {
+        store.destroyExpired((err: unknown) => {
+          expect(preRemoveCallback).toHaveBeenCalledTimes(1);
+          if (err) return reject(err);
+          return resolve();
+        });
+      });
+
+      const lengthAfter = await new Promise((resolve, reject) => {
+        store.length((err: unknown, length: number) => {
+          if (err) return reject(err);
+          return resolve(length);
+        });
+      });
+
+      expect(lengthAfter).toBe(0);
+
+      expect(autoRemoveCallback).toHaveBeenCalledTimes(1);
     });
   });
 

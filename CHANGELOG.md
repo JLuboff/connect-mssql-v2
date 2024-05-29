@@ -2,6 +2,13 @@
 
 All project updates will be documented in this file
 
+## [v5.1.0] - 2024-05-28
+
+- Adds the optional `preRemoveCallback` property to the store options.
+  - This callback is executed within the `destroyExpired` method prior to the removal of sessions.
+  - Credit to: @bradtaniguchi
+  - Issue: https://github.com/JLuboff/connect-mssql-v2/issues/72
+
 ## [v5.0.1] - 2023-12-23
 
 - Updated packages to current versions

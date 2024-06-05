@@ -138,6 +138,111 @@ describe('connect-mssql-v2', () => {
     });
   });
 
+  describe('Custom column names test suite', () => {
+    const store = new MSSQLStore(sqlConfig, {
+      table: 'CustomColumnNameSessions',
+      columnNames: { session: 'UserSessions', sid: 'SessionID', expires: 'SessionExpiresAt' },
+    });
+
+    test('Should not find a session', (done) => {
+      store.get('1234ABC', (err: unknown, session: any) => {
+        if (err) return done(err);
+
+        expect(session).toBeFalsy();
+        return done();
+      });
+    });
+    test('Should create a new session', (done) => {
+      store.set('1234ABC', TESTDATA, done);
+    });
+    test('Should get created session', (done) => {
+      store.get('1234ABC', (err: unknown, session: any) => {
+        if (err) return done(err);
+
+        expect(session).toBeTruthy();
+        expect(session.somevalue).toEqual(TESTDATA.somevalue);
+        expect(session.somenumber).toEqual(TESTDATA.somenumber);
+        expect(session.cookie.expires).toEqual(TESTDATA.cookie.expires.toISOString());
+        return done();
+      });
+    });
+    test('Should modify session', (done) => {
+      store.set('1234ABC', MODIFIEDDATA, done);
+    });
+    test('Should get modified session', (done) => {
+      store.get('1234ABC', (err: unknown, session: any) => {
+        if (err) return done(err);
+
+        expect(session).toBeTruthy();
+        expect(session.somevalue).toEqual(MODIFIEDDATA.somevalue);
+        expect(session.somenumber).toEqual(MODIFIEDDATA.somenumber);
+        expect(session.cookie.expires).toEqual(MODIFIEDDATA.cookie.expires.toISOString());
+        return done();
+      });
+    });
+    test('Should touch session', (done) => {
+      store.touch('1234ABC', TOUCHED, done);
+    });
+    test('Should get touched session', (done) => {
+      store.get('1234ABC', (err: unknown, session: any) => {
+        if (err) return done(err);
+
+        expect(session).toBeTruthy();
+        expect(session.cookie.expires).toEqual(TOUCHED.cookie.expires.toISOString());
+        return done();
+      });
+    });
+    test('Should get all existing sessions', (done) => {
+      store.set('5678DEF', TESTDATA, () => {
+        store.all((err: unknown, session: any) => {
+          if (err) return done(err);
+
+          expect(Object.keys(session)).toHaveLength(2);
+          expect(session['5678DEF'].somevalue).toBe('yes');
+
+          store.destroy('5678DEF');
+          return done();
+        });
+      });
+    });
+    test('Should remove created session', (done) => {
+      store.destroy('1234ABC', done);
+    });
+    test('Should have no sessions in the database', (done) => {
+      store.length((err: unknown, length: number) => {
+        if (err) return done(err);
+
+        expect(length).toBe(0);
+        return done();
+      });
+    });
+
+    test('Should add a session than use clear method to remove', (done) => {
+      store.set('5678DEF', TESTDATA, () => {
+        store.all((err: unknown, session: any) => {
+          if (err) return done(err);
+
+          expect(Object.keys(session)).toHaveLength(1);
+          expect(session['5678DEF'].somevalue).toBe('yes');
+
+          store.clear((err: unknown) => {
+            if (err) return done(err);
+            store.all((err: unknown, session: any) => {
+              if (err) return done(err);
+
+              expect(session).toBeFalsy();
+              return done();
+            });
+
+            return done();
+          });
+
+          return done();
+        });
+      });
+    });
+  });
+
   describe('autoRemove test suite', () => {
     test('Should destroy all sessions', (done) => {
       let cbed = false;

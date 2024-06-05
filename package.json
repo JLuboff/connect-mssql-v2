@@ -6,10 +6,12 @@
   "types": "dist/src/store.d.ts",
   "scripts": {
     "prepublishOnly": "npm run clean && npm run build",
-    "build": "npx tsc",
+    "build": "tsc",
     "test": "jest ./dist/test",
-    "lint": "npx eslint src --ext .ts",
-    "clean": "npx rimraf dist"
+    "lint": "eslint src --ext .ts",
+    "clean": "npm run clean:dist && npm run clean:coverage",
+    "clean:dist": "rimraf dist",
+    "clean:coverage": "rimraf coverage"
   },
   "repository": {
     "type": "git",

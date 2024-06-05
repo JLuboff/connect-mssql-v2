@@ -11,11 +11,28 @@ import sql, {
 } from 'mssql';
 import session, { SessionData, Store as ExpressSessionStore } from 'express-session';
 
+type ColumnNames = {
+  session: string;
+  sid: string;
+  expires: string;
+};
+
+const DEFAULT_COLUMN_NAMES = {
+  session: 'session',
+  sid: 'sid',
+  expires: 'expires',
+} as const satisfies ColumnNames;
+
 export interface StoreOptions {
   /**
    * Table to use as session store. Default: `[sessions]`
    */
   table?: string;
+  /**
+   * An object containing the names of the columns used in the database table
+   * Default: { session: 'session', sid: 'sid', expires: 'expires'}
+   */
+  columnNames?: ColumnNames;
   /**
    * (Time To Live) Determines the expiration date. Default: `1000 * 60 * 60 * 24` (24 hours)
    */
@@ -78,6 +95,8 @@ interface QueryRunnerProps {
 class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   table: string;
 
+  columnNames: ColumnNames;
+
   ttl: number;
 
   autoRemove: boolean;
@@ -97,6 +116,10 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   constructor(config: SQLConfig, options?: StoreOptions) {
     super();
     this.table = options?.table || 'sessions';
+    this.columnNames = {
+      ...DEFAULT_COLUMN_NAMES,
+      ...(options?.columnNames ? options.columnNames : {}),
+    };
     this.ttl = options?.ttl || 1000 * 60 * 60 * 24;
     this.autoRemove = options?.autoRemove || false;
     this.autoRemoveInterval = options?.autoRemoveInterval || 1000 * 60 * 10;
@@ -175,7 +198,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     if (!isReady) {
       throw new Error('Database connection is closed');
     }
-    // TODO: might not actually need await?
+
     const request = await this.databaseConnection.request();
     const { inputParameters, expectReturn, queryStatement } = props;
     /**
@@ -246,9 +269,9 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     try {
       const queryResult = await this.queryRunner<{ session: string }>({
         inputParameters: { sid: { value: sid, dataType: NVarChar(255) } },
-        queryStatement: `SELECT session 
+        queryStatement: `SELECT ${this.columnNames.session} 
                            FROM ${this.table}
-                           WHERE sid = @sid`,
+                           WHERE ${this.columnNames.sid} = @sid`,
         expectReturn: true,
       });
 
@@ -276,11 +299,12 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
           expires: { value: expires, dataType: DateTime },
         },
         queryStatement: `UPDATE ${this.table} 
-                           SET session = @session, expires = @expires 
-                           WHERE sid = @sid;
+                           SET ${this.columnNames.session} = @session, ${this.columnNames.expires} = @expires 
+                           WHERE ${this.columnNames.sid} = @sid;
                            IF @@ROWCOUNT = 0 
                             BEGIN
-                              INSERT INTO ${this.table} (sid, session, expires)
+                              INSERT INTO ${this.table} 
+                                (${this.columnNames.sid}, ${this.columnNames.session}, ${this.columnNames.expires})
                                 VALUES (@sid, @session, @expires)
                             END;`,
         expectReturn: false,
@@ -311,8 +335,8 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
           expires: { value: expires, dataType: DateTime },
         },
         queryStatement: `UPDATE ${this.table} 
-                           SET expires = @expires 
-                           WHERE sid = @sid`,
+                           SET ${this.columnNames.expires} = @expires 
+                           WHERE ${this.columnNames.sid} = @sid`,
         expectReturn: false,
       });
 
@@ -336,7 +360,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
       await this.queryRunner({
         inputParameters: { sid: { value: sid, dataType: NVarChar(255) } },
         queryStatement: `DELETE FROM ${this.table} 
-                           WHERE sid = @sid`,
+                           WHERE ${this.columnNames.sid} = @sid`,
         expectReturn: false,
       });
 
@@ -365,7 +389,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
 
       await this.queryRunner({
         queryStatement: `DELETE FROM ${this.table} 
-                           WHERE expires <= GET${this.useUTC ? 'UTC' : ''}DATE()`,
+                           WHERE ${this.columnNames.expires} <= GET${this.useUTC ? 'UTC' : ''}DATE()`,
         expectReturn: false,
       });
 
@@ -393,7 +417,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   async length(callback: (err: unknown, length: number) => void) {
     try {
       const queryResult = await this.queryRunner<{ length: number }>({
-        queryStatement: `SELECT COUNT(sid) AS length
+        queryStatement: `SELECT COUNT(${this.columnNames.sid}) AS length
                            FROM ${this.table}`,
         expectReturn: true,
       });

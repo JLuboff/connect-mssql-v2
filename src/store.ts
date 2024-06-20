@@ -240,15 +240,15 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   // //////////////////////////////////////////////////////////////
   async all(callback: (err: unknown, session?: { [sid: string]: SessionData } | null) => void) {
     try {
-      const queryResult = await this.queryRunner<{ sid: string; session: string }>({
-        queryStatement: `SELECT sid, session FROM ${this.table}`,
+      const queryResult = await this.queryRunner<Record<string, string>>({
+        queryStatement: `SELECT ${this.columnNames.sid}, ${this.columnNames.session} FROM ${this.table}`,
         expectReturn: true,
       });
       const returnObject: { [sid: string]: SessionData } = {};
-
+      console.log({ queryResult, sidName: this.columnNames.sid });
       if (queryResult) {
-        queryResult.forEach(({ sid, session: sessionValue }) => {
-          returnObject[sid] = JSON.parse(sessionValue);
+        queryResult.forEach((record) => {
+          returnObject[record[this.columnNames.sid]] = JSON.parse(record[this.columnNames.session]);
         });
       }
 
@@ -267,7 +267,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
   // //////////////////////////////////////////////////////////////
   async get(sid: string, callback: (err: unknown, session?: SessionData | null) => void) {
     try {
-      const queryResult = await this.queryRunner<{ session: string }>({
+      const queryResult = await this.queryRunner<Record<string, string>>({
         inputParameters: { sid: { value: sid, dataType: NVarChar(255) } },
         queryStatement: `SELECT ${this.columnNames.session} 
                            FROM ${this.table}
@@ -275,7 +275,10 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
         expectReturn: true,
       });
 
-      callback(null, queryResult?.length ? JSON.parse(queryResult[0].session) : null);
+      callback(
+        null,
+        queryResult?.length ? JSON.parse(queryResult[0][this.columnNames.session]) : null,
+      );
     } catch (err) {
       this.errorHandler('get', err, callback);
     }

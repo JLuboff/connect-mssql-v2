@@ -44,6 +44,14 @@ export interface StoreOptions {
    * Determines if we are to use the `GETUTCDATE` instead of `GETDATE` Default: `true`
    */
   useUTC?: boolean;
+  /**
+   * The number of times to retry a DB connection before failing. Default: 0
+   */
+  retries?: number;
+  /**
+   * The initial connection retry delay in milliseconds. Default: 1000
+   */
+  retryDelay?: number;
 }
 export interface MSSQLStoreDef {
   config: SQLConfig;
@@ -90,6 +98,10 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
 
   useUTC: boolean;
 
+  retries: number;
+
+  retryDelay: number;
+
   config: SQLConfig;
 
   databaseConnection: ConnectionPool;
@@ -103,6 +115,8 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     this.preRemoveCallback = options?.preRemoveCallback || undefined;
     this.autoRemoveCallback = options?.autoRemoveCallback || undefined;
     this.useUTC = options?.useUTC || true;
+    this.retries = options?.retries || 0;
+    this.retryDelay = options?.retryDelay || 1000;
     this.config = config;
     this.databaseConnection = new sql.ConnectionPool(config);
   }
@@ -130,20 +144,26 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
    * Verifies database connection has been established, and if not, will initialize connection
    */
   // ////////////////////////////////////////////////////////////////
-  private async dbReadyCheck() {
-    try {
-      if (!this.databaseConnection.connected && !this.databaseConnection.connecting) {
-        await this.initializeDatabase();
-      }
+  private async dbReadyCheck(retries: number, delay: number) {
+    for (let attempt = 1; attempt <= (retries + 1); attempt++) {
+      try {
+        if (!this.databaseConnection.connected && !this.databaseConnection.connecting) {
+          await this.initializeDatabase();
+        }
 
-      if (this.databaseConnection?.connected) {
-        return true;
-      }
+        if (this.databaseConnection?.connected) {
+          return true;
+        }
 
-      throw new Error('Connection is closed.');
-    } catch (error) {
-      this.databaseConnection!.emit('error', error);
-      throw error;
+        throw new Error('Database connection is closed.');
+      } catch (error) {
+        if (attempt < retries) {
+          await new Promise((resolve) => setTimeout(resolve, delay * attempt)); // increasing delay
+        } else {
+          this.databaseConnection!.emit('error', error);
+          throw error;
+        }
+      }
     }
   }
 
@@ -171,7 +191,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
    */
   // ////////////////////////////////////////////////////////////////
   private async queryRunner<T>(props: QueryRunnerProps): Promise<IRecordSet<T> | null> {
-    const isReady = await this.dbReadyCheck();
+    const isReady = await this.dbReadyCheck(this.retries, this.retryDelay);
     if (!isReady) {
       throw new Error('Database connection is closed');
     }

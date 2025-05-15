@@ -9,6 +9,9 @@ on:
 jobs:
   # TODO: Add windows build if possible
   build-linux:
+    # last version that natively works with sqlcmd via the mssqlsuite
+    # not really sure why this doesn't work with 24 as mssqlsuite should
+    # handle it, might need to migrate in the future
     runs-on: ubuntu-22.04
 
     strategy:

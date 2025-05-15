@@ -145,7 +145,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
    */
   // ////////////////////////////////////////////////////////////////
   private async dbReadyCheck() {
-    for (let attempt = 1; attempt <= (this.retries + 1); attempt++) {
+    for (let attempt = 1; attempt <= this.retries + 1; attempt += 1) {
       try {
         if (!this.databaseConnection.connected && !this.databaseConnection.connecting) {
           await this.initializeDatabase();
@@ -155,16 +155,20 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
           return true;
         }
 
-        throw new Error('Database connection is closed.');
+        throw new Error('Connection is closed.');
       } catch (error) {
         if (attempt < this.retries) {
-          await new Promise((resolve) => setTimeout(resolve, this.delay * attempt)); // increasing delay
+          // increasing delay
+          await new Promise((resolve) => {
+            setTimeout(resolve, this.retryDelay * attempt);
+          });
         } else {
           this.databaseConnection!.emit('error', error);
           throw error;
         }
       }
     }
+    return false;
   }
 
   // ////////////////////////////////////////////////////////////////

@@ -9,7 +9,7 @@ on:
 jobs:
   # TODO: Add windows build if possible
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24
 
     strategy:
       matrix:

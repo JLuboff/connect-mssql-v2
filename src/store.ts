@@ -44,6 +44,14 @@ export interface StoreOptions {
    * Determines if we are to use the `GETUTCDATE` instead of `GETDATE` Default: `true`
    */
   useUTC?: boolean;
+  /**
+   * The number of times to retry a DB connection before failing. Default: 0
+   */
+  retries?: number;
+  /**
+   * The initial connection retry delay in milliseconds. Default: 1000
+   */
+  retryDelay?: number;
 }
 export interface MSSQLStoreDef {
   config: SQLConfig;
@@ -90,6 +98,10 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
 
   useUTC: boolean;
 
+  retries: number;
+
+  retryDelay: number;
+
   config: SQLConfig;
 
   databaseConnection: ConnectionPool;
@@ -103,6 +115,8 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     this.preRemoveCallback = options?.preRemoveCallback || undefined;
     this.autoRemoveCallback = options?.autoRemoveCallback || undefined;
     this.useUTC = options?.useUTC || true;
+    this.retries = options?.retries || 0;
+    this.retryDelay = options?.retryDelay || 1000;
     this.config = config;
     this.databaseConnection = new sql.ConnectionPool(config);
   }
@@ -131,20 +145,30 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
    */
   // ////////////////////////////////////////////////////////////////
   private async dbReadyCheck() {
-    try {
-      if (!this.databaseConnection.connected && !this.databaseConnection.connecting) {
-        await this.initializeDatabase();
-      }
+    for (let attempt = 1; attempt <= this.retries + 1; attempt += 1) {
+      try {
+        if (!this.databaseConnection.connected && !this.databaseConnection.connecting) {
+          await this.initializeDatabase();
+        }
 
-      if (this.databaseConnection?.connected) {
-        return true;
-      }
+        if (this.databaseConnection?.connected) {
+          return true;
+        }
 
-      throw new Error('Connection is closed.');
-    } catch (error) {
-      this.databaseConnection!.emit('error', error);
-      throw error;
+        throw new Error('Connection is closed.');
+      } catch (error) {
+        if (attempt < this.retries) {
+          // increasing delay
+          await new Promise((resolve) => {
+            setTimeout(resolve, this.retryDelay * attempt);
+          });
+        } else {
+          this.databaseConnection!.emit('error', error);
+          throw error;
+        }
+      }
     }
+    return false;
   }
 
   // ////////////////////////////////////////////////////////////////
@@ -246,7 +270,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     try {
       const queryResult = await this.queryRunner<{ session: string }>({
         inputParameters: { sid: { value: sid, dataType: NVarChar(255) } },
-        queryStatement: `SELECT session 
+        queryStatement: `SELECT session
                            FROM ${this.table}
                            WHERE sid = @sid`,
         expectReturn: true,
@@ -275,10 +299,10 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
           session: { value: JSON.stringify(currentSession), dataType: NVarChar(MAX) },
           expires: { value: expires, dataType: DateTime },
         },
-        queryStatement: `UPDATE ${this.table} 
-                           SET session = @session, expires = @expires 
+        queryStatement: `UPDATE ${this.table}
+                           SET session = @session, expires = @expires
                            WHERE sid = @sid;
-                           IF @@ROWCOUNT = 0 
+                           IF @@ROWCOUNT = 0
                             BEGIN
                               INSERT INTO ${this.table} (sid, session, expires)
                                 VALUES (@sid, @session, @expires)
@@ -310,8 +334,8 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
           sid: { value: sid, dataType: NVarChar(255) },
           expires: { value: expires, dataType: DateTime },
         },
-        queryStatement: `UPDATE ${this.table} 
-                           SET expires = @expires 
+        queryStatement: `UPDATE ${this.table}
+                           SET expires = @expires
                            WHERE sid = @sid`,
         expectReturn: false,
       });
@@ -335,7 +359,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     try {
       await this.queryRunner({
         inputParameters: { sid: { value: sid, dataType: NVarChar(255) } },
-        queryStatement: `DELETE FROM ${this.table} 
+        queryStatement: `DELETE FROM ${this.table}
                            WHERE sid = @sid`,
         expectReturn: false,
       });
@@ -364,7 +388,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
       }
 
       await this.queryRunner({
-        queryStatement: `DELETE FROM ${this.table} 
+        queryStatement: `DELETE FROM ${this.table}
                            WHERE expires <= GET${this.useUTC ? 'UTC' : ''}DATE()`,
         expectReturn: false,
       });

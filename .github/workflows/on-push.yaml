@@ -9,7 +9,10 @@ on:
 jobs:
   # TODO: Add windows build if possible
   build-linux:
-    runs-on: ubuntu-latest
+    # last version that natively works with sqlcmd via the mssqlsuite
+    # not really sure why this doesn't work with 24 as mssqlsuite should
+    # handle it, might need to migrate in the future
+    runs-on: ubuntu-22.04
 
     strategy:
       matrix:
@@ -25,7 +28,7 @@ jobs:
       - run: npm run build
       - run: npm run lint
       - name: Install a SQL Server suite of tools
-        uses: potatoqualitee/mssqlsuite@v1.5.1
+        uses: potatoqualitee/mssqlsuite@v1.8
         with:
           install: sqlengine
       - name: Seed session table

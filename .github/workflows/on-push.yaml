@@ -1,0 +1,46 @@
+name: on-push
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  # TODO: Add windows build if possible
+  build-linux:
+    # last version that natively works with sqlcmd via the mssqlsuite
+    # not really sure why this doesn't work with 24 as mssqlsuite should
+    # handle it, might need to migrate in the future
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x, 22.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
+      - name: Install a SQL Server suite of tools
+        uses: potatoqualitee/mssqlsuite@v1.8
+        with:
+          install: sqlengine
+      - name: Seed session table
+        run: |
+          sqlcmd -S localhost -U sa -P dbatools.I0 -d tempdb -Q "CREATE TABLE [dbo].[sessions](
+              [sid] [nvarchar](255) NOT NULL PRIMARY KEY,
+              [session] [nvarchar](max) NOT NULL,
+              [expires] [datetime] NOT NULL
+          )"
+      - run: npm run test
+        env:
+          SQLUSER: sa
+          SQLPASSWORD: dbatools.I0
+          SQLSERVER: localhost
+          SQLDATABASE: tempdb

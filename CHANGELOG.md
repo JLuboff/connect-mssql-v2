@@ -2,6 +2,21 @@
 
 All project updates will be documented in this file
 
+## [v5.2.0] - 2025-05-22
+
+- Adds optional retry attempts to database connection
+  - Credit to: @delfuego
+  - Issue: github.com/JLuboff/connect-mssql-v2/issues/81
+- Updates all minor/patch dependencies
+  - @types/express-session ^1.17.10 → ^1.18.1
+  - @types/jest ^29.5.11 → ^29.5.14
+  - @types/mssql ^9.1.4 → ^9.1.7
+  - dotenv ^16.3.1 → ^16.5.0
+  - eslint-plugin-import ^2.29.1 → ^2.31.0
+  - express-session ^1.17.3 → ^1.18.1
+  - prettier ^3.1.1 → ^3.5.3
+  - typescript ^5.3.3 → ^5.8.3
+
 ## [v5.1.0] - 2024-05-28
 
 - Adds the optional `preRemoveCallback` property to the store options.

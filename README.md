@@ -85,6 +85,8 @@ app.use(
   If this returns a promise, the removal will wait for the promise to resolve. Default: `undefined`
 - **options.autoRemoveCallback** - Is the callback function for `destroyExpired()`. Default: `undefined`
 - **options.useUTC** - Determines if we are to use the `GETUTCDATE` instead of `GETDATE` Default: `true`
+- **options.retries** - The number of times to retry a DB connection before failing. Default: `0` (tries once)
+- **options.retryDelay** - The retry delay in milliseconds. Default: `1000`
 
 ### Advanced usage
 

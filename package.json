@@ -38,6 +38,7 @@
     "@types/express-session": "^1.18.1",
     "@types/jest": "^29.5.14",
     "@types/mssql": "^9.1.7",
+    "@types/tedious": "^4.0.14",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "dotenv": "^16.5.0",

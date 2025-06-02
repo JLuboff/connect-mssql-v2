@@ -115,6 +115,10 @@ app.use(session({
 
 To see all options please visit [node-mssql docs](https://github.com/tediousjs/node-mssql#general-same-for-all-drivers).
 
+## Upgrading from v5.x.x to v6.x.x
+
+Ensure you're running Node >= v17
+
 ## Upgrading from v4.x.x to v5.x.x
 
 Ensure you're running Node >=v15

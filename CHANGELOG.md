@@ -2,6 +2,15 @@
 
 All project updates will be documented in this file
 
+## [v6.0.0] - 2025-06-01
+
+- Drop support for Node < v17 due to updating `mssql` to v11
+- Updates the following dependencies
+  - husky ^8.0.3 → ^9.1.7
+  - lint-staged ^15.2.0 → ^16.1.0
+  - mssql ^10.0.1 → ^11.0.1
+  - rimraf ^5.0.7 → ^6.0.1
+
 ## [v5.2.1] - 2025-06-16
 
 - Fix #91 - `useUTC` is always `true` even if `false` is provided. Replaced `||` with `??`

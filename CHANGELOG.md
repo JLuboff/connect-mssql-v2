@@ -11,6 +11,10 @@ All project updates will be documented in this file
   - mssql ^10.0.1 → ^11.0.1
   - rimraf ^5.0.7 → ^6.0.1
 
+## [v5.2.1] - 2025-06-16
+
+- Fix #91 - `useUTC` is always `true` even if `false` is provided. Replaced `||` with `??`
+
 ## [v5.2.0] - 2025-05-22
 
 - Adds optional retry attempts to database connection

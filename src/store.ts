@@ -114,7 +114,7 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
     this.autoRemoveInterval = options?.autoRemoveInterval || 1000 * 60 * 10;
     this.preRemoveCallback = options?.preRemoveCallback || undefined;
     this.autoRemoveCallback = options?.autoRemoveCallback || undefined;
-    this.useUTC = options?.useUTC || true;
+    this.useUTC = options?.useUTC ?? true;
     this.retries = options?.retries || 0;
     this.retryDelay = options?.retryDelay || 1000;
     this.config = config;

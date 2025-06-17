@@ -1,15 +1,15 @@
+import session, { Store as ExpressSessionStore, SessionData } from 'express-session';
 import sql, {
-  config as SQLConfig,
-  NVarChar,
-  MAX,
-  DateTime,
   ConnectionPool,
-  ISqlTypeWithLength,
-  IResult,
+  DateTime,
   IRecordSet,
+  IResult,
   ISqlTypeFactoryWithNoParams,
+  ISqlTypeWithLength,
+  MAX,
+  NVarChar,
+  config as SQLConfig,
 } from 'mssql';
-import session, { SessionData, Store as ExpressSessionStore } from 'express-session';
 
 export interface StoreOptions {
   /**
@@ -178,13 +178,30 @@ class MSSQLStore extends ExpressSessionStore implements MSSQLStoreDef {
    * @param sessionCookie
    */
   // ////////////////////////////////////////////////////////////////
-  private getExpirationDate(sessionCookie: session.Cookie) {
-    const isExpireBoolean = !!sessionCookie && typeof sessionCookie.expires === 'boolean';
-    const expires = new Date(
-      isExpireBoolean || !sessionCookie?.expires ? Date.now() + this.ttl : sessionCookie.expires,
-    );
+  private getExpirationDate(sessionCookie: session.Cookie): Date {
+    // When store.touch is called, express-session has already called Session.touch(),
+    // which resets session.cookie.maxAge to session.cookie.originalMaxAge.
+    // The express-session Cookie class is expected to update session.cookie.expires
+    // (the absolute timestamp) based on this reset maxAge.
+    // Therefore, sessionCookie.expires, if it's a valid Date, should be the primary source.
 
-    return expires;
+    if (sessionCookie && sessionCookie.expires instanceof Date) {
+      // Create a new Date instance from the provided expires Date.
+      return new Date(sessionCookie.expires.getTime());
+    }
+
+    // If sessionCookie.expires is not a valid Date (e.g., undefined, or for session-only cookies
+    // where maxAge is null), then try to calculate the expiration from sessionCookie.maxAge.
+    // This maxAge would be the originalMaxAge for the session.
+    if (sessionCookie && typeof sessionCookie.maxAge === 'number') {
+      return new Date(Date.now() + sessionCookie.maxAge);
+    }
+
+    // Fallback: if neither cookie.expires (as a Date) nor cookie.maxAge (as a number)
+    // is available to determine the expiration, use the store's default TTL.
+    // This handles cases like a session cookie (maxAge === null) where we still want
+    // the store entry to expire eventually, or if cookie data is unexpectedly missing.
+    return new Date(Date.now() + this.ttl);
   }
 
   // ////////////////////////////////////////////////////////////////
